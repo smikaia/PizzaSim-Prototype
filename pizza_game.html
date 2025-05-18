@@ -109,24 +109,36 @@
       {
         name: "Student",
         taste: { cheese: 2, tomatoes: 2, veggies: 1, pepperoni: 4 },
-        priceMin: 12, priceMax: 15
+        priceMin: 12, priceMax: 15,
+        totalCustomers: 40
       },
       {
         name: "Tourist",
         taste: { cheese: 3, tomatoes: 3, veggies: 2, pepperoni: 2 },
-        priceMin: 14, priceMax: 18
+        priceMin: 14, priceMax: 18,
+        totalCustomers: 30
       },
       {
         name: "Healthy Eater",
         taste: { cheese: 1, tomatoes: 3, veggies: 4, pepperoni: 0 },
-        priceMin: 13, priceMax: 16
+        priceMin: 13, priceMax: 16,
+        totalCustomers: 15
       },
       {
         name: "Gourmet Eater",
         taste: { cheese: 4, tomatoes: 2, veggies: 2, pepperoni: 3 },
-        priceMin: 16, priceMax: 20
+        priceMin: 16, priceMax: 20,
+        totalCustomers: 15
       }
     ];
+
+    // Track which customers have visited
+    let visitedCustomers = {
+      "Student": new Set(),
+      "Tourist": new Set(),
+      "Healthy Eater": new Set(),
+      "Gourmet Eater": new Set()
+    };
 
     // Feedback templates
     const FEEDBACK = {
@@ -196,9 +208,41 @@
       const pizzas = getPizzaData();
       const ingredientCosts = getIngredientCosts();
       let customers = [];
+      
+      // Select 10 random customers from the pool, ensuring we don't pick the same customer twice
+      let availableCustomers = [];
+      CUSTOMER_SEGMENTS.forEach(segment => {
+        for (let i = 1; i <= segment.totalCustomers; i++) {
+          if (!visitedCustomers[segment.name].has(i)) {
+            availableCustomers.push({ segment, customerId: i });
+          }
+        }
+      });
+
+      // If we have less than 10 available customers, reset the visited customers
+      if (availableCustomers.length < 10) {
+        CUSTOMER_SEGMENTS.forEach(segment => {
+          visitedCustomers[segment.name].clear();
+        });
+        availableCustomers = [];
+        CUSTOMER_SEGMENTS.forEach(segment => {
+          for (let i = 1; i <= segment.totalCustomers; i++) {
+            availableCustomers.push({ segment, customerId: i });
+          }
+        });
+      }
+
+      // Shuffle and select 10 customers
       for (let i = 0; i < 10; i++) {
-        let segIdx = randomInt(0, CUSTOMER_SEGMENTS.length - 1);
-        customers.push({ id: i+1, segment: CUSTOMER_SEGMENTS[segIdx] });
+        if (availableCustomers.length === 0) break;
+        const randomIndex = Math.floor(Math.random() * availableCustomers.length);
+        const selected = availableCustomers.splice(randomIndex, 1)[0];
+        customers.push({ 
+          id: selected.customerId, 
+          segment: selected.segment,
+          segmentName: selected.segment.name 
+        });
+        visitedCustomers[selected.segment.name].add(selected.customerId);
       }
 
       let dayResult = {
@@ -207,13 +251,16 @@
         totalSatisfaction: 0,
         dailyProfit: 0,
         segmentSatisfaction: {},
-        segmentCounts: {}
+        segmentCounts: {},
+        segmentTotalServed: {}
       };
 
       // Initialize segment tracking
       CUSTOMER_SEGMENTS.forEach(seg => {
         dayResult.segmentSatisfaction[seg.name] = 0;
         dayResult.segmentCounts[seg.name] = 0;
+        // Calculate total customers served so far for each segment
+        dayResult.segmentTotalServed[seg.name] = visitedCustomers[seg.name].size;
       });
 
       let resultsHTML = `<h2>Day ${currentDay} Results</h2>`;
@@ -278,8 +325,8 @@
         if (satisfaction < 1) satisfaction = 1;
         if (satisfaction > 10) satisfaction = 10;
         dayResult.totalSatisfaction += satisfaction;
-        dayResult.segmentSatisfaction[customer.segment.name] += satisfaction;
-        dayResult.segmentCounts[customer.segment.name] += 1;
+        dayResult.segmentSatisfaction[customer.segmentName] += satisfaction;
+        dayResult.segmentCounts[customer.segmentName] += 1;
         // Calculate profit for this pizza sale
         let pizzaCost = 0;
         INGREDIENTS.forEach(ing => {
@@ -290,12 +337,12 @@
         // Store customer result
         dayResult.customers.push({
           id: customer.id,
-          segment: customer.segment.name,
+          segment: customer.segmentName,
           pizza: bestPizza.name,
           feedback: feedback,
           satisfaction: satisfaction
         });
-        resultsHTML += `<tr><td>C${customer.id}</td><td>${customer.segment.name}</td><td>${bestPizza.name}</td><td>${feedback}</td><td>${satisfaction}</td></tr>`;
+        resultsHTML += `<tr><td>C${customer.id}</td><td>${customer.segmentName}</td><td>${bestPizza.name}</td><td>${feedback}</td><td>${satisfaction}</td></tr>`;
       });
 
       resultsHTML += `</table>`;
@@ -304,9 +351,16 @@
       
       resultsHTML += `<h3>Average Satisfaction by Segment</h3><ul>`;
       CUSTOMER_SEGMENTS.forEach(seg => {
-        let avg = dayResult.segmentCounts[seg.name] > 0 ? 
-          (dayResult.segmentSatisfaction[seg.name] / dayResult.segmentCounts[seg.name]).toFixed(2) : 'N/A';
-        resultsHTML += `<li><b>${seg.name}:</b> ${avg} / 10</li>`;
+        let avgSatisfaction = dayResult.segmentCounts[seg.name] > 0 ? 
+          (dayResult.segmentSatisfaction[seg.name] / dayResult.segmentCounts[seg.name]) : 0;
+        
+        // Calculate segment coverage (percentage of total segment served)
+        let coverage = (dayResult.segmentTotalServed[seg.name] / seg.totalCustomers) * 100;
+        
+        // Calculate weighted satisfaction (satisfaction * coverage)
+        let weightedSatisfaction = avgSatisfaction * (coverage / 100);
+        
+        resultsHTML += `<li><b>${seg.name}:</b> ${avgSatisfaction.toFixed(2)} / 10 (${coverage.toFixed(1)}% of segment served, weighted: ${weightedSatisfaction.toFixed(2)})</li>`;
       });
       resultsHTML += `</ul>`;
 
@@ -343,6 +397,10 @@
       currentDayView = 1;
       simulationComplete = false;
       dayResults = [];
+      // Reset visited customers tracking
+      CUSTOMER_SEGMENTS.forEach(segment => {
+        visitedCustomers[segment.name].clear();
+      });
       document.getElementById('current-day').textContent = currentDay;
       document.getElementById('simulate-button').disabled = false;
       document.getElementById('next-day-button').disabled = true;
@@ -398,9 +456,11 @@
       let totalSatisfaction = 0;
       let bestPizzaByDay = [];
       let segmentTrends = {};
+      let segmentCoverage = {};
       
       CUSTOMER_SEGMENTS.forEach(seg => {
         segmentTrends[seg.name] = [];
+        segmentCoverage[seg.name] = [];
       });
       
       dayResults.forEach((day, index) => {
@@ -415,11 +475,13 @@
         let bestPizza = Object.entries(pizzaSales).sort((a, b) => b[1] - a[1])[0][0];
         bestPizzaByDay.push({ day: index + 1, pizza: bestPizza });
         
-        // Track segment satisfaction trends
+        // Track segment satisfaction and coverage trends
         CUSTOMER_SEGMENTS.forEach(seg => {
           let avg = day.segmentCounts[seg.name] > 0 ? 
             (day.segmentSatisfaction[seg.name] / day.segmentCounts[seg.name]) : 0;
+          let coverage = (day.segmentTotalServed[seg.name] / seg.totalCustomers) * 100;
           segmentTrends[seg.name].push(avg);
+          segmentCoverage[seg.name].push(coverage);
         });
       });
       
@@ -432,10 +494,15 @@
           ${bestPizzaByDay.map(day => `<li>Day ${day.day}: ${day.pizza}</li>`).join('')}
         </ul>
         
-        <h3>Customer Segment Satisfaction Trends</h3>
+        <h3>Customer Segment Analysis</h3>
         <ul>
           ${CUSTOMER_SEGMENTS.map(seg => `
-            <li><b>${seg.name}:</b> ${segmentTrends[seg.name].map(s => s.toFixed(2)).join(' → ')}</li>
+            <li><b>${seg.name}:</b><br>
+                Satisfaction: ${segmentTrends[seg.name].map(s => s.toFixed(2)).join(' → ')}<br>
+                Coverage: ${segmentCoverage[seg.name].map(c => c.toFixed(1) + '%').join(' → ')}<br>
+                Final Weighted Score: ${(segmentTrends[seg.name][segmentTrends[seg.name].length-1] * 
+                (segmentCoverage[seg.name][segmentCoverage[seg.name].length-1]/100)).toFixed(2)} / 10
+            </li>
           `).join('')}
         </ul>
       `;
