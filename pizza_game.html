@@ -10,10 +10,16 @@
     th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: center; }
     th { background: #ffe5b4; }
     input[type=number] { width: 50px; }
-    .button { background: #b33c00; color: #fff; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+    .button { background: #b33c00; color: #fff; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-right: 10px; }
     .button:hover { background: #d35400; }
+    .button:disabled { background: #ccc; cursor: not-allowed; }
     .feedback { margin: 10px 0; padding: 10px; background: #fff3e0; border-left: 4px solid #b33c00; }
     .results { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px #ccc; }
+    .simulation-controls { margin: 20px 0; padding: 15px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #ccc; }
+    .day-counter { font-size: 1.2em; font-weight: bold; color: #b33c00; margin-bottom: 10px; }
+    .simulation-summary { margin-top: 20px; padding: 15px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #ccc; }
+    .day-navigation { margin: 10px 0; }
+    .day-navigation button { margin-right: 5px; }
   </style>
 </head>
 <body>
@@ -74,9 +80,25 @@
     </tr>
   </table>
 
-  <button class="button" onclick="simulateDay()">Simulate Day</button>
+  <div class="simulation-controls">
+    <div class="day-counter">Day: <span id="current-day">1</span> of 5</div>
+    <button class="button" id="simulate-button" onclick="simulateDay()">Simulate Day</button>
+    <button class="button" id="next-day-button" onclick="nextDay()" disabled>Next Day</button>
+    <button class="button" id="reset-button" onclick="resetSimulation()">Reset Simulation</button>
+  </div>
 
-  <div class="results" id="results" style="display:none;"></div>
+  <div class="results" id="results" style="display:none;">
+    <div class="day-navigation" id="day-navigation" style="display:none;">
+      <button class="button" onclick="showPreviousDay()">Previous Day</button>
+      <button class="button" onclick="showNextDay()">Next Day</button>
+    </div>
+    <div id="current-day-results"></div>
+  </div>
+
+  <div class="simulation-summary" id="simulation-summary" style="display:none;">
+    <h2>Simulation Summary</h2>
+    <div id="summary-content"></div>
+  </div>
 
   <script>
     // Ingredient names
@@ -162,7 +184,15 @@
       return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
+    // Simulation state
+    let currentDay = 1;
+    let simulationComplete = false;
+    let dayResults = [];
+    let currentDayView = 1;
+
     function simulateDay() {
+      if (currentDay > 5 || simulationComplete) return;
+      
       const pizzas = getPizzaData();
       const ingredientCosts = getIngredientCosts();
       let customers = [];
@@ -170,18 +200,25 @@
         let segIdx = randomInt(0, CUSTOMER_SEGMENTS.length - 1);
         customers.push({ id: i+1, segment: CUSTOMER_SEGMENTS[segIdx] });
       }
-      let resultsHTML = `<h2>Day Results</h2>`;
-      let totalSatisfaction = 0;
-      // Track satisfaction by segment
-      let segmentSatisfaction = {};
-      let segmentCounts = {};
+
+      let dayResult = {
+        day: currentDay,
+        customers: [],
+        totalSatisfaction: 0,
+        dailyProfit: 0,
+        segmentSatisfaction: {},
+        segmentCounts: {}
+      };
+
+      // Initialize segment tracking
       CUSTOMER_SEGMENTS.forEach(seg => {
-        segmentSatisfaction[seg.name] = 0;
-        segmentCounts[seg.name] = 0;
+        dayResult.segmentSatisfaction[seg.name] = 0;
+        dayResult.segmentCounts[seg.name] = 0;
       });
-      // Track daily profit
-      let dailyProfit = 0;
+
+      let resultsHTML = `<h2>Day ${currentDay} Results</h2>`;
       resultsHTML += `<table><tr><th>Customer</th><th>Segment</th><th>Pizza Chosen</th><th>Feedback</th><th>Satisfaction</th></tr>`;
+
       customers.forEach((customer, idx) => {
         // Find best pizza for this customer
         let bestPizza = null;
@@ -240,32 +277,171 @@
         let satisfaction = 10 - bestDiff.tasteDiff - bestDiff.pricePenalty;
         if (satisfaction < 1) satisfaction = 1;
         if (satisfaction > 10) satisfaction = 10;
-        totalSatisfaction += satisfaction;
-        // Add to segment satisfaction
-        segmentSatisfaction[customer.segment.name] += satisfaction;
-        segmentCounts[customer.segment.name] += 1;
+        dayResult.totalSatisfaction += satisfaction;
+        dayResult.segmentSatisfaction[customer.segment.name] += satisfaction;
+        dayResult.segmentCounts[customer.segment.name] += 1;
         // Calculate profit for this pizza sale
         let pizzaCost = 0;
         INGREDIENTS.forEach(ing => {
           pizzaCost += bestPizza.recipe[ing] * ingredientCosts[ing];
         });
         let pizzaProfit = bestPizza.price - pizzaCost;
-        dailyProfit += pizzaProfit;
+        dayResult.dailyProfit += pizzaProfit;
+        // Store customer result
+        dayResult.customers.push({
+          id: customer.id,
+          segment: customer.segment.name,
+          pizza: bestPizza.name,
+          feedback: feedback,
+          satisfaction: satisfaction
+        });
         resultsHTML += `<tr><td>C${customer.id}</td><td>${customer.segment.name}</td><td>${bestPizza.name}</td><td>${feedback}</td><td>${satisfaction}</td></tr>`;
       });
+
       resultsHTML += `</table>`;
-      resultsHTML += `<p><b>Average Satisfaction:</b> ${(totalSatisfaction/10).toFixed(2)} / 10</p>`;
-      // Show daily profit
-      resultsHTML += `<p><b>Daily Profit:</b> $${dailyProfit} USD</p>`;
-      // Show average satisfaction by segment
+      resultsHTML += `<p><b>Average Satisfaction:</b> ${(dayResult.totalSatisfaction/10).toFixed(2)} / 10</p>`;
+      resultsHTML += `<p><b>Daily Profit:</b> $${dayResult.dailyProfit} USD</p>`;
+      
       resultsHTML += `<h3>Average Satisfaction by Segment</h3><ul>`;
       CUSTOMER_SEGMENTS.forEach(seg => {
-        let avg = segmentCounts[seg.name] > 0 ? (segmentSatisfaction[seg.name] / segmentCounts[seg.name]).toFixed(2) : 'N/A';
+        let avg = dayResult.segmentCounts[seg.name] > 0 ? 
+          (dayResult.segmentSatisfaction[seg.name] / dayResult.segmentCounts[seg.name]).toFixed(2) : 'N/A';
         resultsHTML += `<li><b>${seg.name}:</b> ${avg} / 10</li>`;
       });
       resultsHTML += `</ul>`;
-      document.getElementById('results').innerHTML = resultsHTML;
+
+      // Store the day's results
+      dayResults[currentDay - 1] = dayResult;
+      document.getElementById('current-day-results').innerHTML = resultsHTML;
       document.getElementById('results').style.display = 'block';
+      document.getElementById('day-navigation').style.display = 'block';
+      
+      // Update simulation state
+      document.getElementById('simulate-button').disabled = true;
+      document.getElementById('next-day-button').disabled = false;
+      
+      if (currentDay === 5) {
+        simulationComplete = true;
+        document.getElementById('next-day-button').disabled = true;
+        updateSimulationSummary();
+      }
+    }
+
+    function nextDay() {
+      if (currentDay < 5 && !simulationComplete) {
+        currentDay++;
+        currentDayView = currentDay;
+        document.getElementById('current-day').textContent = currentDay;
+        document.getElementById('simulate-button').disabled = false;
+        document.getElementById('next-day-button').disabled = true;
+        document.getElementById('results').style.display = 'none';
+      }
+    }
+
+    function resetSimulation() {
+      currentDay = 1;
+      currentDayView = 1;
+      simulationComplete = false;
+      dayResults = [];
+      document.getElementById('current-day').textContent = currentDay;
+      document.getElementById('simulate-button').disabled = false;
+      document.getElementById('next-day-button').disabled = true;
+      document.getElementById('results').style.display = 'none';
+      document.getElementById('simulation-summary').style.display = 'none';
+    }
+
+    function showPreviousDay() {
+      if (currentDayView > 1) {
+        currentDayView--;
+        displayDayResults(currentDayView);
+      }
+    }
+
+    function showNextDay() {
+      if (currentDayView < currentDay) {
+        currentDayView++;
+        displayDayResults(currentDayView);
+      }
+    }
+
+    function displayDayResults(day) {
+      if (dayResults[day - 1]) {
+        const result = dayResults[day - 1];
+        let resultsHTML = `<h2>Day ${day} Results</h2>`;
+        resultsHTML += `<table><tr><th>Customer</th><th>Segment</th><th>Pizza Chosen</th><th>Feedback</th><th>Satisfaction</th></tr>`;
+        
+        result.customers.forEach(customer => {
+          resultsHTML += `<tr><td>C${customer.id}</td><td>${customer.segment}</td><td>${customer.pizza}</td><td>${customer.feedback}</td><td>${customer.satisfaction}</td></tr>`;
+        });
+        
+        resultsHTML += `</table>`;
+        resultsHTML += `<p><b>Average Satisfaction:</b> ${(result.totalSatisfaction/10).toFixed(2)} / 10</p>`;
+        resultsHTML += `<p><b>Daily Profit:</b> $${result.dailyProfit} USD</p>`;
+        
+        resultsHTML += `<h3>Average Satisfaction by Segment</h3><ul>`;
+        CUSTOMER_SEGMENTS.forEach(seg => {
+          let avg = result.segmentCounts[seg.name] > 0 ? 
+            (result.segmentSatisfaction[seg.name] / result.segmentCounts[seg.name]).toFixed(2) : 'N/A';
+          resultsHTML += `<li><b>${seg.name}:</b> ${avg} / 10</li>`;
+        });
+        resultsHTML += `</ul>`;
+        
+        document.getElementById('current-day-results').innerHTML = resultsHTML;
+        document.getElementById('results').style.display = 'block';
+      }
+    }
+
+    function updateSimulationSummary() {
+      if (dayResults.length === 0) return;
+      
+      let totalProfit = 0;
+      let totalSatisfaction = 0;
+      let bestPizzaByDay = [];
+      let segmentTrends = {};
+      
+      CUSTOMER_SEGMENTS.forEach(seg => {
+        segmentTrends[seg.name] = [];
+      });
+      
+      dayResults.forEach((day, index) => {
+        totalProfit += day.dailyProfit;
+        totalSatisfaction += day.totalSatisfaction;
+        
+        // Find best performing pizza for the day
+        let pizzaSales = {};
+        day.customers.forEach(customer => {
+          pizzaSales[customer.pizza] = (pizzaSales[customer.pizza] || 0) + 1;
+        });
+        let bestPizza = Object.entries(pizzaSales).sort((a, b) => b[1] - a[1])[0][0];
+        bestPizzaByDay.push({ day: index + 1, pizza: bestPizza });
+        
+        // Track segment satisfaction trends
+        CUSTOMER_SEGMENTS.forEach(seg => {
+          let avg = day.segmentCounts[seg.name] > 0 ? 
+            (day.segmentSatisfaction[seg.name] / day.segmentCounts[seg.name]) : 0;
+          segmentTrends[seg.name].push(avg);
+        });
+      });
+      
+      let summaryHTML = `
+        <p><b>Total Profit:</b> $${totalProfit} USD</p>
+        <p><b>Average Satisfaction:</b> ${(totalSatisfaction/(dayResults.length * 10)).toFixed(2)} / 10</p>
+        
+        <h3>Best Performing Pizza by Day</h3>
+        <ul>
+          ${bestPizzaByDay.map(day => `<li>Day ${day.day}: ${day.pizza}</li>`).join('')}
+        </ul>
+        
+        <h3>Customer Segment Satisfaction Trends</h3>
+        <ul>
+          ${CUSTOMER_SEGMENTS.map(seg => `
+            <li><b>${seg.name}:</b> ${segmentTrends[seg.name].map(s => s.toFixed(2)).join(' → ')}</li>
+          `).join('')}
+        </ul>
+      `;
+      
+      document.getElementById('summary-content').innerHTML = summaryHTML;
+      document.getElementById('simulation-summary').style.display = 'block';
     }
 
     // Update pizza costs and profits
