@@ -20,11 +20,32 @@
     .simulation-summary { margin-top: 20px; padding: 15px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #ccc; }
     .day-navigation { margin: 10px 0; }
     .day-navigation button { margin-right: 5px; }
+    .cash-display {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px #ccc;
+      margin-left: 20px;
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #b33c00;
+    }
+    .cash-display.low {
+      color: #ff0000;
+    }
+    .marketing-controls.disabled {
+      opacity: 0.6;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
   <h1>Pizza Menu Game Prototype</h1>
-  <h2>Ingredients (Unit Cost)</h2>
+  <div style="display: flex; align-items: center; margin-bottom: 20px;">
+    <h2 style="margin: 0;">Ingredients (Unit Cost)</h2>
+    <div class="cash-display" id="cash-display">Cash: $100 USD</div>
+  </div>
   <table id="ingredients-table">
     <tr>
       <th>Ingredient</th>
@@ -82,6 +103,29 @@
 
   <div class="simulation-controls">
     <div class="day-counter">Day: <span id="current-day">1</span> of 5</div>
+    
+    <div class="marketing-controls" style="margin: 15px 0; padding: 15px; background: #fff3e0; border-radius: 8px;">
+      <h3 style="margin-top: 0; color: #b33c00;">Marketing Activity (Optional)</h3>
+      <div style="margin-bottom: 10px;">
+        <label style="display: block; margin-bottom: 5px;">Activity Type:</label>
+        <select id="marketing-type" style="padding: 5px; margin-right: 10px;">
+          <option value="none">No Marketing</option>
+          <option value="flyer">Flyer Drop ($5)</option>
+          <option value="social">Social Media Ads ($15)</option>
+          <option value="mascot">Street Mascot ($30)</option>
+        </select>
+        
+        <select id="marketing-target" style="padding: 5px;" disabled>
+          <option value="">Select Target Segment</option>
+          <option value="Student">Students</option>
+          <option value="Tourist">Tourists</option>
+          <option value="Healthy Eater">Healthy Eaters</option>
+          <option value="Gourmet Eater">Gourmet Eaters</option>
+        </select>
+      </div>
+      <div id="marketing-cost" style="font-weight: bold; color: #b33c00;"></div>
+    </div>
+
     <button class="button" id="simulate-button" onclick="simulateDay()">Simulate Day</button>
     <button class="button" id="next-day-button" onclick="nextDay()" disabled>Next Day</button>
     <button class="button" id="reset-button" onclick="resetSimulation()">Reset Simulation</button>
@@ -202,6 +246,78 @@
     let dayResults = [];
     let currentDayView = 1;
 
+    // Marketing activity effects
+    const MARKETING_EFFECTS = {
+      flyer: 1.5,    // 50% increase in probability
+      social: 2.0,   // 100% increase in probability
+      mascot: 3.0    // 200% increase in probability
+    };
+
+    const MARKETING_COSTS = {
+      flyer: 5,
+      social: 15,
+      mascot: 30
+    };
+
+    // Add cash management
+    let playerCash = 100; // Starting cash
+
+    function updateCashDisplay() {
+      const cashDisplay = document.getElementById('cash-display');
+      cashDisplay.textContent = `Cash: $${playerCash} USD`;
+      cashDisplay.classList.toggle('low', playerCash < 30); // Red if less than cheapest marketing
+    }
+
+    function updateMarketingControls() {
+      const marketingType = document.getElementById('marketing-type');
+      const marketingControls = document.querySelector('.marketing-controls');
+      const simulateButton = document.getElementById('simulate-button');
+      
+      // Disable marketing controls if not enough cash
+      if (playerCash < 5) {
+        marketingControls.classList.add('disabled');
+        if (marketingType.value !== 'none') {
+          marketingType.value = 'none';
+          document.getElementById('marketing-target').value = '';
+          document.getElementById('marketing-target').disabled = true;
+          document.getElementById('marketing-cost').textContent = '';
+        }
+      } else {
+        marketingControls.classList.remove('disabled');
+      }
+
+      // Update available marketing options based on cash
+      Array.from(marketingType.options).forEach(option => {
+        if (option.value !== 'none') {
+          const cost = MARKETING_COSTS[option.value];
+          option.disabled = playerCash < cost;
+        }
+      });
+    }
+
+    // Update marketing type change handler
+    document.getElementById('marketing-type').addEventListener('change', function() {
+      const targetSelect = document.getElementById('marketing-target');
+      const costDisplay = document.getElementById('marketing-cost');
+      
+      if (this.value === 'none') {
+        targetSelect.disabled = true;
+        targetSelect.value = '';
+        costDisplay.textContent = '';
+      } else {
+        const cost = MARKETING_COSTS[this.value];
+        if (playerCash >= cost) {
+          targetSelect.disabled = false;
+          costDisplay.textContent = `Cost: $${cost} USD`;
+        } else {
+          this.value = 'none';
+          targetSelect.disabled = true;
+          targetSelect.value = '';
+          costDisplay.textContent = '';
+        }
+      }
+    });
+
     function simulateDay() {
       if (currentDay > 5 || simulationComplete) return;
       
@@ -209,12 +325,29 @@
       const ingredientCosts = getIngredientCosts();
       let customers = [];
       
-      // Select 10 random customers from the pool, ensuring we don't pick the same customer twice
+      // Get marketing selection and verify cash
+      const marketingType = document.getElementById('marketing-type').value;
+      const marketingTarget = document.getElementById('marketing-target').value;
+      let marketingCost = 0;
+      let marketingEffect = 1;
+      
+      if (marketingType !== 'none' && marketingTarget) {
+        marketingCost = MARKETING_COSTS[marketingType];
+        if (playerCash < marketingCost) {
+          alert('Not enough cash for selected marketing activity!');
+          return;
+        }
+        marketingEffect = MARKETING_EFFECTS[marketingType];
+      }
+      
+      // Select customers with marketing effects
       let availableCustomers = [];
       CUSTOMER_SEGMENTS.forEach(segment => {
         for (let i = 1; i <= segment.totalCustomers; i++) {
           if (!visitedCustomers[segment.name].has(i)) {
-            availableCustomers.push({ segment, customerId: i });
+            // Apply marketing effect to target segment
+            let weight = segment.name === marketingTarget ? marketingEffect : 1;
+            availableCustomers.push({ segment, customerId: i, weight });
           }
         }
       });
@@ -227,22 +360,40 @@
         availableCustomers = [];
         CUSTOMER_SEGMENTS.forEach(segment => {
           for (let i = 1; i <= segment.totalCustomers; i++) {
-            availableCustomers.push({ segment, customerId: i });
+            let weight = segment.name === marketingTarget ? marketingEffect : 1;
+            availableCustomers.push({ segment, customerId: i, weight });
           }
         });
       }
 
-      // Shuffle and select 10 customers
+      // Weighted random selection of customers
+      let totalWeight = availableCustomers.reduce((sum, c) => sum + c.weight, 0);
       for (let i = 0; i < 10; i++) {
         if (availableCustomers.length === 0) break;
-        const randomIndex = Math.floor(Math.random() * availableCustomers.length);
-        const selected = availableCustomers.splice(randomIndex, 1)[0];
+        
+        // Weighted random selection
+        let random = Math.random() * totalWeight;
+        let selectedIndex = 0;
+        let weightSum = 0;
+        
+        for (let j = 0; j < availableCustomers.length; j++) {
+          weightSum += availableCustomers[j].weight;
+          if (random <= weightSum) {
+            selectedIndex = j;
+            break;
+          }
+        }
+        
+        const selected = availableCustomers.splice(selectedIndex, 1)[0];
         customers.push({ 
           id: selected.customerId, 
           segment: selected.segment,
           segmentName: selected.segment.name 
         });
         visitedCustomers[selected.segment.name].add(selected.customerId);
+        
+        // Update total weight
+        totalWeight -= selected.weight;
       }
 
       let dayResult = {
@@ -252,7 +403,12 @@
         dailyProfit: 0,
         segmentSatisfaction: {},
         segmentCounts: {},
-        segmentTotalServed: {}
+        segmentTotalServed: {},
+        marketing: marketingType !== 'none' ? {
+          type: marketingType,
+          target: marketingTarget,
+          cost: marketingCost
+        } : null
       };
 
       // Initialize segment tracking
@@ -364,6 +520,25 @@
       });
       resultsHTML += `</ul>`;
 
+      // Update cash and profit
+      dayResult.dailyProfit -= marketingCost;
+      playerCash += dayResult.dailyProfit;
+      updateCashDisplay();
+      updateMarketingControls();
+
+      // Update results display to show cash
+      if (marketingType !== 'none') {
+        resultsHTML = `<div class="feedback" style="margin-bottom: 15px;">
+          <b>Marketing Activity:</b> ${marketingType.charAt(0).toUpperCase() + marketingType.slice(1)} 
+          targeting ${marketingTarget} (Cost: $${marketingCost})<br>
+          <b>Remaining Cash:</b> $${playerCash} USD
+        </div>` + resultsHTML;
+      } else {
+        resultsHTML = `<div class="feedback" style="margin-bottom: 15px;">
+          <b>Remaining Cash:</b> $${playerCash} USD
+        </div>` + resultsHTML;
+      }
+
       // Store the day's results
       dayResults[currentDay - 1] = dayResult;
       document.getElementById('current-day-results').innerHTML = resultsHTML;
@@ -389,6 +564,11 @@
         document.getElementById('simulate-button').disabled = false;
         document.getElementById('next-day-button').disabled = true;
         document.getElementById('results').style.display = 'none';
+        document.getElementById('marketing-type').value = 'none';
+        document.getElementById('marketing-target').value = '';
+        document.getElementById('marketing-target').disabled = true;
+        document.getElementById('marketing-cost').textContent = '';
+        updateMarketingControls();
       }
     }
 
@@ -406,6 +586,13 @@
       document.getElementById('next-day-button').disabled = true;
       document.getElementById('results').style.display = 'none';
       document.getElementById('simulation-summary').style.display = 'none';
+      document.getElementById('marketing-type').value = 'none';
+      document.getElementById('marketing-target').value = '';
+      document.getElementById('marketing-target').disabled = true;
+      document.getElementById('marketing-cost').textContent = '';
+      playerCash = 100;
+      updateCashDisplay();
+      updateMarketingControls();
     }
 
     function showPreviousDay() {
@@ -533,6 +720,10 @@
     document.getElementById('cost-pepperoni').addEventListener('change', updatePizzaCosts);
     // Initial update
     updatePizzaCosts();
+
+    // Initial setup
+    updateCashDisplay();
+    updateMarketingControls();
   </script>
 </body>
 </html> 
