@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pizza Menu Game Prototype</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 30px; background: #f8f8f8; }
+    h1, h2 { color: #b33c00; }
+    table { border-collapse: collapse; margin-bottom: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: center; }
+    th { background: #ffe5b4; }
+    input[type=number] { width: 50px; }
+    .button { background: #b33c00; color: #fff; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-right: 10px; }
+    .button:hover { background: #d35400; }
+    .button:disabled { background: #ccc; cursor: not-allowed; }
+    .feedback { margin: 10px 0; padding: 10px; background: #fff3e0; border-left: 4px solid #b33c00; }
+    .results { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px #ccc; }
+    .simulation-controls { margin: 20px 0; padding: 15px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #ccc; }
+    .day-counter { font-size: 1.2em; font-weight: bold; color: #b33c00; margin-bottom: 10px; }
+    .simulation-summary { margin-top: 20px; padding: 15px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #ccc; }
+    .day-navigation { margin: 10px 0; }
+    .day-navigation button { margin-right: 5px; }
+    .cash-display {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px #ccc;
+      margin-left: 20px;
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #b33c00;
+    }
+    .cash-display.low {
+      color: #ff0000;
+    }
+    .marketing-controls.disabled {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pizza Menu Game Prototype</h1>
+  <div style="display: flex; align-items: center; margin-bottom: 20px;">
+    <h2 style="margin: 0;">Ingredients (Unit Cost)</h2>
+    <div class="cash-display" id="cash-display">Cash: $100 USD</div>
+  </div>
+  <table id="ingredients-table">
+    <tr>
+      <th>Ingredient</th>
+      <th>Unit Cost (USD)</th>
+    </tr>
+    <tr><td>Cheese</td><td><input type="number" id="cost-cheese" value="2" min="1"></td></tr>
+    <tr><td>Tomatoes</td><td><input type="number" id="cost-tomatoes" value="1" min="1"></td></tr>
+    <tr><td>Veggies</td><td><input type="number" id="cost-veggies" value="2" min="1"></td></tr>
+    <tr><td>Pepperoni</td><td><input type="number" id="cost-pepperoni" value="3" min="1"></td></tr>
+  </table>
+
+  <h2>Pizza Menu (Edit Recipes & Price)</h2>
+  <table id="pizza-table">
+    <tr>
+      <th>Pizza</th>
+      <th>Cheese</th>
+      <th>Tomatoes</th>
+      <th>Veggies</th>
+      <th>Pepperoni</th>
+      <th>Price (USD)</th>
+      <th>Total Cost (USD)</th>
+      <th>Profit (USD)</th>
+    </tr>
+    <tr>
+      <td>Pizza 1</td>
+      <td><input type="number" id="p1-cheese" value="3" min="0" onchange="updatePizzaCosts()"></td>
+      <td><input type="number" id="p1-tomatoes" value="2" min="0" onchange="updatePizzaCosts()"></td>
+      <td><input type="number" id="p1-veggies" value="1" min="0" onchange="updatePizzaCosts()"></td>
+      <td><input type="number" id="p1-pepperoni" value="4" min="0" onchange="updatePizzaCosts()"></td>
+      <td><input type="number" id="p1-price" value="15" min="1" onchange="updatePizzaCosts()"></td>
+      <td id="p1-cost">0</td>
+      <td id="p1-profit">0</td>
+    </tr>
+    <tr>
+      <td>Pizza 2</td>
+      <td><input type="number" id="p2-cheese" value="0" min="0" onchange="updatePizzaCosts()"></td>
+      <td><input type="number" id="p2-tomatoes" value="1" min="0" onchange="updatePizzaCosts()"></td>
+      <td><input type="number" id="p2-veggies" value="4" min="0" onchange="updatePizzaCosts()"></td>
+      <td><input type="number" id="p2-pepperoni" value="2" min="0" onchange="updatePizzaCosts()"></td>
+      <td><input type="number" id="p2-price" value="13" min="1" onchange="updatePizzaCosts()"></td>
+      <td id="p2-cost">0</td>
+      <td id="p2-profit">0</td>
+    </tr>
+    <tr>
+      <td>Pizza 3</td>
+      <td><input type="number" id="p3-cheese" value="2" min="0" onchange="updatePizzaCosts()"></td>
+      <td><input type="number" id="p3-tomatoes" value="3" min="0" onchange="updatePizzaCosts()"></td>
+      <td><input type="number" id="p3-veggies" value="2" min="0" onchange="updatePizzaCosts()"></td>
+      <td><input type="number" id="p3-pepperoni" value="1" min="0" onchange="updatePizzaCosts()"></td>
+      <td><input type="number" id="p3-price" value="12" min="1" onchange="updatePizzaCosts()"></td>
+      <td id="p3-cost">0</td>
+      <td id="p3-profit">0</td>
+    </tr>
+  </table>
+
+  <div class="simulation-controls">
+    <div class="day-counter">Day: <span id="current-day">1</span> of 5</div>
+    
+    <div class="marketing-controls" style="margin: 15px 0; padding: 15px; background: #fff3e0; border-radius: 8px;">
+      <h3 style="margin-top: 0; color: #b33c00;">Marketing Activity (Optional)</h3>
+      <div style="margin-bottom: 10px;">
+        <label style="display: block; margin-bottom: 5px;">Activity Type:</label>
+        <select id="marketing-type" style="padding: 5px; margin-right: 10px;">
+          <option value="none">No Marketing</option>
+          <option value="flyer">Flyer Drop ($5)</option>
+          <option value="social">Social Media Ads ($15)</option>
+          <option value="mascot">Street Mascot ($30)</option>
+        </select>
+        
+        <select id="marketing-target" style="padding: 5px;" disabled>
+          <option value="">Select Target Segment</option>
+          <option value="Student">Students</option>
+          <option value="Tourist">Tourists</option>
+          <option value="Healthy Eater">Healthy Eaters</option>
+          <option value="Gourmet Eater">Gourmet Eaters</option>
+        </select>
+      </div>
+      <div id="marketing-cost" style="font-weight: bold; color: #b33c00;"></div>
+    </div>
+
+    <button class="button" id="simulate-button" onclick="simulateDay()">Simulate Day</button>
+    <button class="button" id="next-day-button" onclick="nextDay()" disabled>Next Day</button>
+    <button class="button" id="reset-button" onclick="resetSimulation()">Reset Simulation</button>
+  </div>
+
+  <div class="results" id="results" style="display:none;">
+    <div class="day-navigation" id="day-navigation" style="display:none;">
+      <button class="button" onclick="showPreviousDay()">Previous Day</button>
+      <button class="button" onclick="showNextDay()">Next Day</button>
+    </div>
+    <div id="current-day-results"></div>
+  </div>
+
+  <div class="simulation-summary" id="simulation-summary" style="display:none;">
+    <h2>Simulation Summary</h2>
+    <div id="summary-content"></div>
+  </div>
+
+  <script>
+    // Ingredient names
+    const INGREDIENTS = ["cheese", "tomatoes", "veggies", "pepperoni"];
+
+    // Customer segments
+    const CUSTOMER_SEGMENTS = [
+      {
+        name: "Student",
+        taste: { cheese: 2, tomatoes: 2, veggies: 1, pepperoni: 4 },
+        priceMin: 12, priceMax: 15,
+        totalCustomers: 40
+      },
+      {
+        name: "Tourist",
+        taste: { cheese: 3, tomatoes: 3, veggies: 2, pepperoni: 2 },
+        priceMin: 14, priceMax: 18,
+        totalCustomers: 30
+      },
+      {
+        name: "Healthy Eater",
+        taste: { cheese: 1, tomatoes: 3, veggies: 4, pepperoni: 0 },
+        priceMin: 13, priceMax: 16,
+        totalCustomers: 15
+      },
+      {
+        name: "Gourmet Eater",
+        taste: { cheese: 4, tomatoes: 2, veggies: 2, pepperoni: 3 },
+        priceMin: 16, priceMax: 20,
+        totalCustomers: 15
+      }
+    ];
+
+    // Track which customers have visited
+    let visitedCustomers = {
+      "Student": new Set(),
+      "Tourist": new Set(),
+      "Healthy Eater": new Set(),
+      "Gourmet Eater": new Set()
+    };
+
+    // Feedback templates
+    const FEEDBACK = {
+      cheese: [
+        "could use more cheese!",
+        "has too much cheese for my taste.",
+        "perfect amount of cheese!"
+      ],
+      tomatoes: [
+        "needs more tomatoes!",
+        "has too many tomatoes.",
+        "tomatoes are just right!"
+      ],
+      veggies: [
+        "I wish there were more veggies.",
+        "too many veggies for me.",
+        "veggies are perfect!"
+      ],
+      pepperoni: [
+        "more pepperoni would be great!",
+        "too much pepperoni!",
+        "pepperoni is spot on!"
+      ],
+      price: [
+        "Price is too high for me.",
+        "Great value for the price!",
+        "Could be a bit cheaper."
+      ]
+    };
+
+    function getPizzaData() {
+      // Get pizza recipes and prices from inputs
+      let pizzas = [];
+      for (let i = 1; i <= 3; i++) {
+        let recipe = {};
+        INGREDIENTS.forEach(ing => {
+          recipe[ing] = parseInt(document.getElementById(`p${i}-${ing}`).value, 10);
+        });
+        let price = parseInt(document.getElementById(`p${i}-price`).value, 10);
+        pizzas.push({ name: `Pizza ${i}`, recipe, price });
+      }
+      return pizzas;
+    }
+
+    function getIngredientCosts() {
+      return {
+        cheese: parseInt(document.getElementById('cost-cheese').value, 10),
+        tomatoes: parseInt(document.getElementById('cost-tomatoes').value, 10),
+        veggies: parseInt(document.getElementById('cost-veggies').value, 10),
+        pepperoni: parseInt(document.getElementById('cost-pepperoni').value, 10)
+      };
+    }
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // Simulation state
+    let currentDay = 1;
+    let simulationComplete = false;
+    let dayResults = [];
+    let currentDayView = 1;
+
+    // Marketing activity effects
+    const MARKETING_EFFECTS = {
+      flyer: 1.5,    // 50% increase in probability
+      social: 2.0,   // 100% increase in probability
+      mascot: 3.0    // 200% increase in probability
+    };
+
+    const MARKETING_COSTS = {
+      flyer: 5,
+      social: 15,
+      mascot: 30
+    };
+
+    // Add cash management
+    let playerCash = 100; // Starting cash
+
+    function updateCashDisplay() {
+      const cashDisplay = document.getElementById('cash-display');
+      cashDisplay.textContent = `Cash: $${playerCash} USD`;
+      cashDisplay.classList.toggle('low', playerCash < 30); // Red if less than cheapest marketing
+    }
+
+    function updateMarketingControls() {
+      const marketingType = document.getElementById('marketing-type');
+      const marketingControls = document.querySelector('.marketing-controls');
+      const simulateButton = document.getElementById('simulate-button');
+      
+      // Disable marketing controls if not enough cash
+      if (playerCash < 5) {
+        marketingControls.classList.add('disabled');
+        if (marketingType.value !== 'none') {
+          marketingType.value = 'none';
+          document.getElementById('marketing-target').value = '';
+          document.getElementById('marketing-target').disabled = true;
+          document.getElementById('marketing-cost').textContent = '';
+        }
+      } else {
+        marketingControls.classList.remove('disabled');
+      }
+
+      // Update available marketing options based on cash
+      Array.from(marketingType.options).forEach(option => {
+        if (option.value !== 'none') {
+          const cost = MARKETING_COSTS[option.value];
+          option.disabled = playerCash < cost;
+        }
+      });
+    }
+
+    // Update marketing type change handler
+    document.getElementById('marketing-type').addEventListener('change', function() {
+      const targetSelect = document.getElementById('marketing-target');
+      const costDisplay = document.getElementById('marketing-cost');
+      
+      if (this.value === 'none') {
+        targetSelect.disabled = true;
+        targetSelect.value = '';
+        costDisplay.textContent = '';
+      } else {
+        const cost = MARKETING_COSTS[this.value];
+        if (playerCash >= cost) {
+          targetSelect.disabled = false;
+          costDisplay.textContent = `Cost: $${cost} USD`;
+        } else {
+          this.value = 'none';
+          targetSelect.disabled = true;
+          targetSelect.value = '';
+          costDisplay.textContent = '';
+        }
+      }
+    });
+
+    function simulateDay() {
+      if (currentDay > 5 || simulationComplete) return;
+      
+      const pizzas = getPizzaData();
+      const ingredientCosts = getIngredientCosts();
+      let customers = [];
+      
+      // Get marketing selection and verify cash
+      const marketingType = document.getElementById('marketing-type').value;
+      const marketingTarget = document.getElementById('marketing-target').value;
+      let marketingCost = 0;
+      let marketingEffect = 1;
+      
+      if (marketingType !== 'none' && marketingTarget) {
+        marketingCost = MARKETING_COSTS[marketingType];
+        if (playerCash < marketingCost) {
+          alert('Not enough cash for selected marketing activity!');
+          return;
+        }
+        marketingEffect = MARKETING_EFFECTS[marketingType];
+      }
+      
+      // Select customers with marketing effects
+      let availableCustomers = [];
+      CUSTOMER_SEGMENTS.forEach(segment => {
+        for (let i = 1; i <= segment.totalCustomers; i++) {
+          if (!visitedCustomers[segment.name].has(i)) {
+            // Apply marketing effect to target segment
+            let weight = segment.name === marketingTarget ? marketingEffect : 1;
+            availableCustomers.push({ segment, customerId: i, weight });
+          }
+        }
+      });
+
+      // If we have less than 10 available customers, reset the visited customers
+      if (availableCustomers.length < 10) {
+        CUSTOMER_SEGMENTS.forEach(segment => {
+          visitedCustomers[segment.name].clear();
+        });
+        availableCustomers = [];
+        CUSTOMER_SEGMENTS.forEach(segment => {
+          for (let i = 1; i <= segment.totalCustomers; i++) {
+            let weight = segment.name === marketingTarget ? marketingEffect : 1;
+            availableCustomers.push({ segment, customerId: i, weight });
+          }
+        });
+      }
+
+      // Weighted random selection of customers
+      let totalWeight = availableCustomers.reduce((sum, c) => sum + c.weight, 0);
+      for (let i = 0; i < 10; i++) {
+        if (availableCustomers.length === 0) break;
+        
+        // Weighted random selection
+        let random = Math.random() * totalWeight;
+        let selectedIndex = 0;
+        let weightSum = 0;
+        
+        for (let j = 0; j < availableCustomers.length; j++) {
+          weightSum += availableCustomers[j].weight;
+          if (random <= weightSum) {
+            selectedIndex = j;
+            break;
+          }
+        }
+        
+        const selected = availableCustomers.splice(selectedIndex, 1)[0];
+        customers.push({ 
+          id: selected.customerId, 
+          segment: selected.segment,
+          segmentName: selected.segment.name 
+        });
+        visitedCustomers[selected.segment.name].add(selected.customerId);
+        
+        // Update total weight
+        totalWeight -= selected.weight;
+      }
+
+      let dayResult = {
+        day: currentDay,
+        customers: [],
+        totalSatisfaction: 0,
+        dailyProfit: 0,
+        segmentSatisfaction: {},
+        segmentCounts: {},
+        segmentTotalServed: {},
+        marketing: marketingType !== 'none' ? {
+          type: marketingType,
+          target: marketingTarget,
+          cost: marketingCost
+        } : null
+      };
+
+      // Initialize segment tracking
+      CUSTOMER_SEGMENTS.forEach(seg => {
+        dayResult.segmentSatisfaction[seg.name] = 0;
+        dayResult.segmentCounts[seg.name] = 0;
+        // Calculate total customers served so far for each segment
+        dayResult.segmentTotalServed[seg.name] = visitedCustomers[seg.name].size;
+      });
+
+      let resultsHTML = `<h2>Day ${currentDay} Results</h2>`;
+      resultsHTML += `<table><tr><th>Customer</th><th>Segment</th><th>Pizza Chosen</th><th>Feedback</th><th>Satisfaction</th></tr>`;
+
+      customers.forEach((customer, idx) => {
+        // Find best pizza for this customer
+        let bestPizza = null;
+        let bestScore = -Infinity;
+        let bestDiff = null;
+        pizzas.forEach(pizza => {
+          // Calculate taste match (lower is better)
+          let tasteDiff = 0;
+          INGREDIENTS.forEach(ing => {
+            tasteDiff += Math.abs(pizza.recipe[ing] - customer.segment.taste[ing]);
+          });
+          // Calculate price match (0 if in range, else penalty)
+          let pricePenalty = 0;
+          if (pizza.price < customer.segment.priceMin) pricePenalty = customer.segment.priceMin - pizza.price;
+          else if (pizza.price > customer.segment.priceMax) pricePenalty = pizza.price - customer.segment.priceMax;
+          // Lower total diff is better
+          let totalDiff = tasteDiff + pricePenalty;
+          // For tie-breaking, prefer lower price
+          let score = -totalDiff - pizza.price * 0.01;
+          if (score > bestScore) {
+            bestScore = score;
+            bestPizza = pizza;
+            bestDiff = { tasteDiff, pricePenalty, pizza };
+          }
+        });
+        // Feedback: find biggest difference
+        let maxIng = null, maxDiff = 0;
+        INGREDIENTS.forEach(ing => {
+          let diff = Math.abs(bestPizza.recipe[ing] - customer.segment.taste[ing]);
+          if (diff > maxDiff) { maxDiff = diff; maxIng = ing; }
+        });
+        let priceDiff = 0;
+        if (bestPizza.price < customer.segment.priceMin) priceDiff = customer.segment.priceMin - bestPizza.price;
+        else if (bestPizza.price > customer.segment.priceMax) priceDiff = bestPizza.price - customer.segment.priceMax;
+        // Decide if price or ingredient is most critical
+        let feedback = "";
+        // If perfect match, give special feedback
+        if (bestDiff.tasteDiff === 0 && bestDiff.pricePenalty === 0) {
+          feedback = `This pizza (${bestPizza.name}) is perfect for me!`;
+        } else if (priceDiff > maxDiff) {
+          if (bestPizza.price > customer.segment.priceMax) {
+            feedback = FEEDBACK.price[0]; // "Price is too high for me."
+          } else if (bestPizza.price < customer.segment.priceMin) {
+            feedback = "This pizza is too cheap for me.";
+          } else {
+            feedback = FEEDBACK.price[2]; // "Could be a bit cheaper."
+          }
+        } else if (maxDiff > 0) {
+          let ing = maxIng;
+          if (bestPizza.recipe[ing] > customer.segment.taste[ing]) feedback = FEEDBACK[ing][1];
+          else feedback = FEEDBACK[ing][0];
+        } else {
+          feedback = FEEDBACK[INGREDIENTS[randomInt(0,3)]][2];
+        }
+        // Satisfaction: base 10, minus taste and price penalties
+        let satisfaction = 10 - bestDiff.tasteDiff - bestDiff.pricePenalty;
+        if (satisfaction < 1) satisfaction = 1;
+        if (satisfaction > 10) satisfaction = 10;
+        dayResult.totalSatisfaction += satisfaction;
+        dayResult.segmentSatisfaction[customer.segmentName] += satisfaction;
+        dayResult.segmentCounts[customer.segmentName] += 1;
+        // Calculate profit for this pizza sale
+        let pizzaCost = 0;
+        INGREDIENTS.forEach(ing => {
+          pizzaCost += bestPizza.recipe[ing] * ingredientCosts[ing];
+        });
+        let pizzaProfit = bestPizza.price - pizzaCost;
+        dayResult.dailyProfit += pizzaProfit;
+        // Store customer result
+        dayResult.customers.push({
+          id: customer.id,
+          segment: customer.segmentName,
+          pizza: bestPizza.name,
+          feedback: feedback,
+          satisfaction: satisfaction
+        });
+        resultsHTML += `<tr><td>C${customer.id}</td><td>${customer.segmentName}</td><td>${bestPizza.name}</td><td>${feedback}</td><td>${satisfaction}</td></tr>`;
+      });
+
+      resultsHTML += `</table>`;
+      resultsHTML += `<p><b>Average Satisfaction:</b> ${(dayResult.totalSatisfaction/10).toFixed(2)} / 10</p>`;
+      resultsHTML += `<p><b>Daily Profit:</b> $${dayResult.dailyProfit} USD</p>`;
+      
+      resultsHTML += `<h3>Average Satisfaction by Segment</h3><ul>`;
+      CUSTOMER_SEGMENTS.forEach(seg => {
+        let avgSatisfaction = dayResult.segmentCounts[seg.name] > 0 ? 
+          (dayResult.segmentSatisfaction[seg.name] / dayResult.segmentCounts[seg.name]) : 0;
+        
+        // Calculate segment coverage (percentage of total segment served)
+        let coverage = (dayResult.segmentTotalServed[seg.name] / seg.totalCustomers) * 100;
+        
+        // Calculate weighted satisfaction (satisfaction * coverage)
+        let weightedSatisfaction = avgSatisfaction * (coverage / 100);
+        
+        resultsHTML += `<li><b>${seg.name}:</b> ${avgSatisfaction.toFixed(2)} / 10 (${coverage.toFixed(1)}% of segment served, weighted: ${weightedSatisfaction.toFixed(2)})</li>`;
+      });
+      resultsHTML += `</ul>`;
+
+      // Update cash and profit
+      dayResult.dailyProfit -= marketingCost;
+      playerCash += dayResult.dailyProfit;
+      updateCashDisplay();
+      updateMarketingControls();
+
+      // Update results display to show cash
+      if (marketingType !== 'none') {
+        resultsHTML = `<div class="feedback" style="margin-bottom: 15px;">
+          <b>Marketing Activity:</b> ${marketingType.charAt(0).toUpperCase() + marketingType.slice(1)} 
+          targeting ${marketingTarget} (Cost: $${marketingCost})<br>
+          <b>Remaining Cash:</b> $${playerCash} USD
+        </div>` + resultsHTML;
+      } else {
+        resultsHTML = `<div class="feedback" style="margin-bottom: 15px;">
+          <b>Remaining Cash:</b> $${playerCash} USD
+        </div>` + resultsHTML;
+      }
+
+      // Store the day's results
+      dayResults[currentDay - 1] = dayResult;
+      document.getElementById('current-day-results').innerHTML = resultsHTML;
+      document.getElementById('results').style.display = 'block';
+      document.getElementById('day-navigation').style.display = 'block';
+      
+      // Update simulation state
+      document.getElementById('simulate-button').disabled = true;
+      document.getElementById('next-day-button').disabled = false;
+      
+      if (currentDay === 5) {
+        simulationComplete = true;
+        document.getElementById('next-day-button').disabled = true;
+        updateSimulationSummary();
+      }
+    }
+
+    function nextDay() {
+      if (currentDay < 5 && !simulationComplete) {
+        currentDay++;
+        currentDayView = currentDay;
+        document.getElementById('current-day').textContent = currentDay;
+        document.getElementById('simulate-button').disabled = false;
+        document.getElementById('next-day-button').disabled = true;
+        document.getElementById('results').style.display = 'none';
+        document.getElementById('marketing-type').value = 'none';
+        document.getElementById('marketing-target').value = '';
+        document.getElementById('marketing-target').disabled = true;
+        document.getElementById('marketing-cost').textContent = '';
+        updateMarketingControls();
+      }
+    }
+
+    function resetSimulation() {
+      currentDay = 1;
+      currentDayView = 1;
+      simulationComplete = false;
+      dayResults = [];
+      // Reset visited customers tracking
+      CUSTOMER_SEGMENTS.forEach(segment => {
+        visitedCustomers[segment.name].clear();
+      });
+      document.getElementById('current-day').textContent = currentDay;
+      document.getElementById('simulate-button').disabled = false;
+      document.getElementById('next-day-button').disabled = true;
+      document.getElementById('results').style.display = 'none';
+      document.getElementById('simulation-summary').style.display = 'none';
+      document.getElementById('marketing-type').value = 'none';
+      document.getElementById('marketing-target').value = '';
+      document.getElementById('marketing-target').disabled = true;
+      document.getElementById('marketing-cost').textContent = '';
+      playerCash = 100;
+      updateCashDisplay();
+      updateMarketingControls();
+    }
+
+    function showPreviousDay() {
+      if (currentDayView > 1) {
+        currentDayView--;
+        displayDayResults(currentDayView);
+      }
+    }
+
+    function showNextDay() {
+      if (currentDayView < currentDay) {
+        currentDayView++;
+        displayDayResults(currentDayView);
+      }
+    }
+
+    function displayDayResults(day) {
+      if (dayResults[day - 1]) {
+        const result = dayResults[day - 1];
+        let resultsHTML = `<h2>Day ${day} Results</h2>`;
+        resultsHTML += `<table><tr><th>Customer</th><th>Segment</th><th>Pizza Chosen</th><th>Feedback</th><th>Satisfaction</th></tr>`;
+        
+        result.customers.forEach(customer => {
+          resultsHTML += `<tr><td>C${customer.id}</td><td>${customer.segment}</td><td>${customer.pizza}</td><td>${customer.feedback}</td><td>${customer.satisfaction}</td></tr>`;
+        });
+        
+        resultsHTML += `</table>`;
+        resultsHTML += `<p><b>Average Satisfaction:</b> ${(result.totalSatisfaction/10).toFixed(2)} / 10</p>`;
+        resultsHTML += `<p><b>Daily Profit:</b> $${result.dailyProfit} USD</p>`;
+        
+        resultsHTML += `<h3>Average Satisfaction by Segment</h3><ul>`;
+        CUSTOMER_SEGMENTS.forEach(seg => {
+          let avg = result.segmentCounts[seg.name] > 0 ? 
+            (result.segmentSatisfaction[seg.name] / result.segmentCounts[seg.name]).toFixed(2) : 'N/A';
+          resultsHTML += `<li><b>${seg.name}:</b> ${avg} / 10</li>`;
+        });
+        resultsHTML += `</ul>`;
+        
+        document.getElementById('current-day-results').innerHTML = resultsHTML;
+        document.getElementById('results').style.display = 'block';
+      }
+    }
+
+    function updateSimulationSummary() {
+      if (dayResults.length === 0) return;
+      
+      let totalProfit = 0;
+      let totalSatisfaction = 0;
+      let bestPizzaByDay = [];
+      let segmentTrends = {};
+      let segmentCoverage = {};
+      
+      CUSTOMER_SEGMENTS.forEach(seg => {
+        segmentTrends[seg.name] = [];
+        segmentCoverage[seg.name] = [];
+      });
+      
+      dayResults.forEach((day, index) => {
+        totalProfit += day.dailyProfit;
+        totalSatisfaction += day.totalSatisfaction;
+        
+        // Find best performing pizza for the day
+        let pizzaSales = {};
+        day.customers.forEach(customer => {
+          pizzaSales[customer.pizza] = (pizzaSales[customer.pizza] || 0) + 1;
+        });
+        let bestPizza = Object.entries(pizzaSales).sort((a, b) => b[1] - a[1])[0][0];
+        bestPizzaByDay.push({ day: index + 1, pizza: bestPizza });
+        
+        // Track segment satisfaction and coverage trends
+        CUSTOMER_SEGMENTS.forEach(seg => {
+          let avg = day.segmentCounts[seg.name] > 0 ? 
+            (day.segmentSatisfaction[seg.name] / day.segmentCounts[seg.name]) : 0;
+          let coverage = (day.segmentTotalServed[seg.name] / seg.totalCustomers) * 100;
+          segmentTrends[seg.name].push(avg);
+          segmentCoverage[seg.name].push(coverage);
+        });
+      });
+      
+      let summaryHTML = `
+        <p><b>Total Profit:</b> $${totalProfit} USD</p>
+        <p><b>Average Satisfaction:</b> ${(totalSatisfaction/(dayResults.length * 10)).toFixed(2)} / 10</p>
+        
+        <h3>Best Performing Pizza by Day</h3>
+        <ul>
+          ${bestPizzaByDay.map(day => `<li>Day ${day.day}: ${day.pizza}</li>`).join('')}
+        </ul>
+        
+        <h3>Customer Segment Analysis</h3>
+        <ul>
+          ${CUSTOMER_SEGMENTS.map(seg => `
+            <li><b>${seg.name}:</b><br>
+                Satisfaction: ${segmentTrends[seg.name].map(s => s.toFixed(2)).join(' → ')}<br>
+                Coverage: ${segmentCoverage[seg.name].map(c => c.toFixed(1) + '%').join(' → ')}<br>
+                Final Weighted Score: ${(segmentTrends[seg.name][segmentTrends[seg.name].length-1] * 
+                (segmentCoverage[seg.name][segmentCoverage[seg.name].length-1]/100)).toFixed(2)} / 10
+            </li>
+          `).join('')}
+        </ul>
+      `;
+      
+      document.getElementById('summary-content').innerHTML = summaryHTML;
+      document.getElementById('simulation-summary').style.display = 'block';
+    }
+
+    // Update pizza costs and profits
+    function updatePizzaCosts() {
+      const ingredientCosts = getIngredientCosts();
+      for (let i = 1; i <= 3; i++) {
+        let totalCost = 0;
+        INGREDIENTS.forEach(ing => {
+          const qty = parseInt(document.getElementById(`p${i}-${ing}`).value, 10);
+          totalCost += qty * ingredientCosts[ing];
+        });
+        const price = parseInt(document.getElementById(`p${i}-price`).value, 10);
+        const profit = price - totalCost;
+        document.getElementById(`p${i}-cost`).textContent = totalCost;
+        document.getElementById(`p${i}-profit`).textContent = profit;
+      }
+    }
+    // Update costs when ingredient unit costs change
+    document.getElementById('cost-cheese').addEventListener('change', updatePizzaCosts);
+    document.getElementById('cost-tomatoes').addEventListener('change', updatePizzaCosts);
+    document.getElementById('cost-veggies').addEventListener('change', updatePizzaCosts);
+    document.getElementById('cost-pepperoni').addEventListener('change', updatePizzaCosts);
+    // Initial update
+    updatePizzaCosts();
+
+    // Initial setup
+    updateCashDisplay();
+    updateMarketingControls();
+  </script>
+</body>
+</html> 
