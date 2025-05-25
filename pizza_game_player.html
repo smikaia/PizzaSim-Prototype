@@ -38,6 +38,167 @@
       opacity: 0.6;
       pointer-events: none;
     }
+    /* Pizza Visualization Styles */
+    .pizza-visual {
+      width: 200px;
+      height: 200px;
+      background: #f4d03f;
+      border-radius: 50%;
+      position: relative;
+      margin: 20px auto;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      border: 8px solid #e67e22;
+      overflow: hidden;
+    }
+    
+    .pizza-crust {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #f4d03f;
+      border-radius: 50%;
+    }
+    
+    .pizza-sauce {
+      position: absolute;
+      top: 10%;
+      left: 10%;
+      right: 10%;
+      bottom: 10%;
+      background: #e74c3c;
+      border-radius: 50%;
+      opacity: 0.8;
+    }
+    
+    .pizza-cheese {
+      position: absolute;
+      top: 15%;
+      left: 15%;
+      right: 15%;
+      bottom: 15%;
+      background: #f9e79f;
+      border-radius: 50%;
+      opacity: 0.9;
+    }
+    
+    .pizza-toppings {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    .topping {
+      position: absolute;
+      font-size: 24px;
+      transition: all 0.3s ease;
+    }
+    
+    .ingredient-preview {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+      font-size: 0.9em;
+      color: #666;
+    }
+    
+    .ingredient-preview span {
+      font-size: 1.2em;
+    }
+    
+    /* New Pizza Menu Card Styles */
+    .pizza-menu-container {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin: 30px 0;
+      flex-wrap: wrap;
+    }
+    
+    .pizza-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      width: 280px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease;
+      position: relative;
+      border: 2px solid #ffe5b4;
+    }
+    
+    .pizza-card:hover {
+      transform: translateY(-5px);
+    }
+    
+    .pizza-card .pizza-name {
+      font-size: 1.4em;
+      font-weight: bold;
+      color: #b33c00;
+      text-align: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #ffe5b4;
+    }
+    
+    .pizza-card .pizza-visual {
+      width: 180px;
+      height: 180px;
+      margin: 0 auto 15px;
+    }
+    
+    .pizza-card .pizza-stats {
+      background: #fff3e0;
+      border-radius: 8px;
+      padding: 12px;
+      margin: 10px 0;
+    }
+    
+    .pizza-card .stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 5px 0;
+      font-size: 1.1em;
+    }
+    
+    .pizza-card .stat-label {
+      color: #666;
+    }
+    
+    .pizza-card .stat-value {
+      font-weight: bold;
+      color: #b33c00;
+    }
+    
+    .pizza-card .edit-button {
+      background: #b33c00;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      width: 100%;
+      font-size: 1.1em;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      margin-top: 15px;
+    }
+    
+    .pizza-card .edit-button:hover {
+      background: #d35400;
+    }
+    
+    /* Hide the original table but keep it for data management */
+    #pizza-table {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -58,6 +219,13 @@
   </table>
 
   <h2>Pizza Menu (Edit Recipes & Price)</h2>
+  
+  <!-- New Pizza Menu UI -->
+  <div class="pizza-menu-container" id="pizza-menu-container">
+    <!-- Pizza cards will be dynamically inserted here -->
+  </div>
+  
+  <!-- Original table (hidden but kept for data management) -->
   <table id="pizza-table">
     <tr>
       <th>Pizza</th>
@@ -70,7 +238,7 @@
       <th>Profit (USD)</th>
     </tr>
     <tr>
-      <td>Pizza 1</td>
+      <td><span class="pizza-edit-link" data-pizza="1" style="cursor:pointer; color:#b33c00; text-decoration:underline;">Pizza 1</span></td>
       <td><input type="number" id="p1-cheese" value="3" min="0" onchange="updatePizzaCosts()"></td>
       <td><input type="number" id="p1-tomatoes" value="2" min="0" onchange="updatePizzaCosts()"></td>
       <td><input type="number" id="p1-veggies" value="1" min="0" onchange="updatePizzaCosts()"></td>
@@ -80,7 +248,7 @@
       <td id="p1-profit">0</td>
     </tr>
     <tr>
-      <td>Pizza 2</td>
+      <td><span class="pizza-edit-link" data-pizza="2" style="cursor:pointer; color:#b33c00; text-decoration:underline;">Pizza 2</span></td>
       <td><input type="number" id="p2-cheese" value="0" min="0" onchange="updatePizzaCosts()"></td>
       <td><input type="number" id="p2-tomatoes" value="1" min="0" onchange="updatePizzaCosts()"></td>
       <td><input type="number" id="p2-veggies" value="4" min="0" onchange="updatePizzaCosts()"></td>
@@ -90,7 +258,7 @@
       <td id="p2-profit">0</td>
     </tr>
     <tr>
-      <td>Pizza 3</td>
+      <td><span class="pizza-edit-link" data-pizza="3" style="cursor:pointer; color:#b33c00; text-decoration:underline;">Pizza 3</span></td>
       <td><input type="number" id="p3-cheese" value="2" min="0" onchange="updatePizzaCosts()"></td>
       <td><input type="number" id="p3-tomatoes" value="3" min="0" onchange="updatePizzaCosts()"></td>
       <td><input type="number" id="p3-veggies" value="2" min="0" onchange="updatePizzaCosts()"></td>
@@ -142,6 +310,41 @@
   <div class="simulation-summary" id="simulation-summary" style="display:none;">
     <h2>Simulation Summary</h2>
     <div id="summary-content"></div>
+  </div>
+
+  <!-- Minami Lane-style Pizza Edit Modal -->
+  <div id="pizza-edit-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.25); z-index:1000; align-items:center; justify-content:center;">
+    <div id="pizza-edit-content" style="background:#fffbe9; border-radius:18px; box-shadow:0 4px 24px #bfae8e; padding:32px 40px; min-width:380px; max-width:95vw; position:relative;">
+      <button id="pizza-edit-close" style="position:absolute; top:18px; right:18px; background:none; border:none; font-size:1.5em; cursor:pointer; color:#b33c00;">&times;</button>
+      <div style="display:flex; align-items:center; gap:18px; margin-bottom:18px;">
+        <div id="pizza-edit-icon" style="width:64px; height:64px; background:#ffe5b4; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:2.5em;">🍕</div>
+        <div>
+          <input id="pizza-edit-title" type="text" style="font-size:1.2em; font-weight:bold; color:#b33c00; background: #fffbe9; border: 1px solid #bfae8e; border-radius: 6px; padding: 4px 10px; width: 160px;" maxlength="32" />
+        </div>
+      </div>
+      
+      <!-- Add Pizza Visualization -->
+      <div class="pizza-visual">
+        <div class="pizza-crust"></div>
+        <div class="pizza-sauce"></div>
+        <div class="pizza-cheese"></div>
+        <div class="pizza-toppings" id="pizza-toppings"></div>
+      </div>
+      
+      <div style="margin-bottom:18px;">
+        <div style="font-weight:bold; margin-bottom:8px;">Customize your pizza</div>
+        <div id="pizza-edit-ingredients"></div>
+      </div>
+      <div style="margin-bottom:18px; display:flex; gap:24px; align-items:center;">
+        <div>Total cost: <span id="pizza-edit-total-cost" style="font-weight:bold; color:#b33c00;"></span></div>
+        <div>Profit: <span id="pizza-edit-profit" style="font-weight:bold; color:#b33c00;"></span></div>
+      </div>
+      <div style="margin-bottom:18px;">
+        <label for="pizza-edit-price" style="font-weight:bold;">Selling price: $</label>
+        <input type="number" id="pizza-edit-price" min="1" style="width:70px; padding:4px 8px; border-radius:6px; border:1px solid #ccc; font-size:1em;">
+      </div>
+      <button id="pizza-edit-done" class="button" style="width:100%; font-size:1.1em;">Done</button>
+    </div>
   </div>
 
   <script>
@@ -213,6 +416,9 @@
       ]
     };
 
+    // Track pizza names (default to Pizza 1, 2, 3)
+    let pizzaNames = ["Pizza 1", "Pizza 2", "Pizza 3"];
+
     function getPizzaData() {
       // Get pizza recipes and prices from inputs
       let pizzas = [];
@@ -222,7 +428,9 @@
           recipe[ing] = parseInt(document.getElementById(`p${i}-${ing}`).value, 10);
         });
         let price = parseInt(document.getElementById(`p${i}-price`).value, 10);
-        pizzas.push({ name: `Pizza ${i}`, recipe, price });
+        // Use pizzaNames array for the name
+        let name = pizzaNames[i-1] || `Pizza ${i}`;
+        pizzas.push({ name, recipe, price });
       }
       return pizzas;
     }
@@ -495,6 +703,7 @@
           id: customer.id,
           segment: customer.segmentName,
           pizza: bestPizza.name,
+          pizzaIndex: pizzas.indexOf(bestPizza), // store index for robustness
           feedback: feedback,
           satisfaction: satisfaction
         });
@@ -616,7 +825,9 @@
         resultsHTML += `<table><tr><th>Customer</th><th>Segment</th><th>Pizza Chosen</th><th>Feedback</th><th>Satisfaction</th></tr>`;
         
         result.customers.forEach(customer => {
-          resultsHTML += `<tr><td>C${customer.id}</td><td>${customer.segment}</td><td>${customer.pizza}</td><td>${customer.feedback}</td><td>${customer.satisfaction}</td></tr>`;
+          // Use the pizzaNames array for the current name
+          let pizzaName = pizzaNames[customer.pizzaIndex] || customer.pizza;
+          resultsHTML += `<tr><td>C${customer.id}</td><td>${customer.segment}</td><td>${pizzaName}</td><td>${customer.feedback}</td><td>${customer.satisfaction}</td></tr>`;
         });
         
         resultsHTML += `</table>`;
@@ -724,6 +935,276 @@
     // Initial setup
     updateCashDisplay();
     updateMarketingControls();
+
+    // --- Pizza Edit Modal Logic ---
+    const PIZZA_ICONS = ['🍕','🍕','🍕']; // You can use different icons if you want
+    // Add ingredient emojis mapping
+    const INGREDIENT_EMOJIS = {
+      cheese: '🧀',
+      tomatoes: '🍅',
+      veggies: '🥬',
+      pepperoni: '🍖'
+    };
+    
+    // Add ingredient colors for visual feedback
+    const INGREDIENT_COLORS = {
+      cheese: '#f9e79f',
+      tomatoes: '#e74c3c',
+      veggies: '#2ecc71',
+      pepperoni: '#c0392b'
+    };
+    
+    function updatePizzaVisual(ingredients) {
+      const toppingsContainer = document.getElementById('pizza-toppings');
+      toppingsContainer.innerHTML = '';
+      
+      // Calculate total ingredients for scaling
+      const totalIngredients = Object.values(ingredients).reduce((sum, qty) => sum + qty, 0);
+      
+      // Add toppings based on quantities
+      Object.entries(ingredients).forEach(([ing, qty]) => {
+        for (let i = 0; i < qty; i++) {
+          const topping = document.createElement('div');
+          topping.className = 'topping';
+          topping.textContent = INGREDIENT_EMOJIS[ing];
+          
+          // Position toppings in a spiral pattern
+          const angle = (i / qty) * Math.PI * 2;
+          const radius = 70 * (1 - (totalIngredients - qty) / (totalIngredients * 2));
+          const x = Math.cos(angle) * radius;
+          const y = Math.sin(angle) * radius;
+          
+          topping.style.transform = `translate(${x}px, ${y}px)`;
+          toppingsContainer.appendChild(topping);
+        }
+      });
+    }
+    
+    function openPizzaEditModal(pizzaIndex) {
+      const pizzas = getPizzaData();
+      const ingredientCosts = getIngredientCosts();
+      const pizza = pizzas[pizzaIndex];
+      document.getElementById('pizza-edit-title').value = pizzaNames[pizzaIndex];
+      document.getElementById('pizza-edit-icon').textContent = PIZZA_ICONS[pizzaIndex];
+      
+      // Build ingredient controls
+      const ingDiv = document.getElementById('pizza-edit-ingredients');
+      ingDiv.innerHTML = '';
+      
+      // Initial pizza visualization
+      updatePizzaVisual(pizza.recipe);
+      
+      INGREDIENTS.forEach(ing => {
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.marginBottom = '8px';
+        row.innerHTML = `
+          <span style="width:90px; display:inline-block; font-weight:bold; color:#b33c00;">
+            ${INGREDIENT_EMOJIS[ing]} ${ing.charAt(0).toUpperCase()+ing.slice(1)}
+          </span>
+          <button class="pizza-edit-minus" data-ing="${ing}" style="background:#ffe5b4; border:none; border-radius:50%; width:32px; height:32px; font-size:1.3em; color:#b33c00; margin:0 8px;">-</button>
+          <span class="pizza-edit-qty" data-ing="${ing}" style="min-width:24px; display:inline-block; text-align:center; font-size:1.1em;">${pizza.recipe[ing]}</span>
+          <button class="pizza-edit-plus" data-ing="${ing}" style="background:#ffe5b4; border:none; border-radius:50%; width:32px; height:32px; font-size:1.3em; color:#b33c00; margin:0 8px;">+</button>
+          <span style="margin-left:8px; color:#888;">$${ingredientCosts[ing]}</span>
+        `;
+        ingDiv.appendChild(row);
+      });
+      
+      // Set price
+      document.getElementById('pizza-edit-price').value = pizza.price;
+      // Update cost/profit
+      function updateModalCostProfit() {
+        let totalCost = 0;
+        INGREDIENTS.forEach(ing => {
+          const qty = parseInt(document.querySelector(`.pizza-edit-qty[data-ing='${ing}']`).textContent, 10);
+          totalCost += qty * ingredientCosts[ing];
+        });
+        const price = parseInt(document.getElementById('pizza-edit-price').value, 10);
+        document.getElementById('pizza-edit-total-cost').textContent = `$${totalCost}`;
+        document.getElementById('pizza-edit-profit').textContent = `$${price - totalCost}`;
+      }
+      updateModalCostProfit();
+      // + and - button handlers
+      ingDiv.querySelectorAll('.pizza-edit-minus').forEach(btn => {
+        btn.onclick = function() {
+          const ing = btn.getAttribute('data-ing');
+          const qtySpan = ingDiv.querySelector(`.pizza-edit-qty[data-ing='${ing}']`);
+          let qty = parseInt(qtySpan.textContent, 10);
+          if (qty > 0) qty--;
+          qtySpan.textContent = qty;
+          
+          // Update visual pizza
+          const currentIngredients = {};
+          INGREDIENTS.forEach(i => {
+            currentIngredients[i] = parseInt(ingDiv.querySelector(`.pizza-edit-qty[data-ing='${i}']`).textContent, 10);
+          });
+          updatePizzaVisual(currentIngredients);
+          
+          updateModalCostProfit();
+        };
+      });
+      ingDiv.querySelectorAll('.pizza-edit-plus').forEach(btn => {
+        btn.onclick = function() {
+          const ing = btn.getAttribute('data-ing');
+          const qtySpan = ingDiv.querySelector(`.pizza-edit-qty[data-ing='${ing}']`);
+          let qty = parseInt(qtySpan.textContent, 10);
+          qty++;
+          qtySpan.textContent = qty;
+          
+          // Update visual pizza
+          const currentIngredients = {};
+          INGREDIENTS.forEach(i => {
+            currentIngredients[i] = parseInt(ingDiv.querySelector(`.pizza-edit-qty[data-ing='${i}']`).textContent, 10);
+          });
+          updatePizzaVisual(currentIngredients);
+          
+          updateModalCostProfit();
+        };
+      });
+      document.getElementById('pizza-edit-price').oninput = updateModalCostProfit;
+      // Show modal
+      document.getElementById('pizza-edit-modal').style.display = 'flex';
+      // Done button handler
+      document.getElementById('pizza-edit-done').onclick = function() {
+        // Write back to main table
+        INGREDIENTS.forEach(ing => {
+          const qty = parseInt(ingDiv.querySelector(`.pizza-edit-qty[data-ing='${ing}']`).textContent, 10);
+          document.getElementById(`p${pizzaIndex+1}-${ing}`).value = qty;
+        });
+        document.getElementById(`p${pizzaIndex+1}-price`).value = parseInt(document.getElementById('pizza-edit-price').value, 10);
+        // Update pizza name in the main table
+        const newName = document.getElementById('pizza-edit-title').value.trim() || `Pizza ${pizzaIndex+1}`;
+        // Update the clickable pizza name in the table
+        const pizzaLink = document.querySelector(`.pizza-edit-link[data-pizza='${pizzaIndex+1}']`);
+        pizzaLink.textContent = newName;
+        pizzaLink.setAttribute('data-pizza-name', newName);
+        pizzaNames[pizzaIndex] = newName;
+        updatePizzaCosts();
+        document.getElementById('pizza-edit-modal').style.display = 'none';
+      };
+    }
+    // Close modal handler
+    document.getElementById('pizza-edit-close').onclick = function() {
+      document.getElementById('pizza-edit-modal').style.display = 'none';
+    };
+    // Open modal on pizza name click
+    document.querySelectorAll('.pizza-edit-link').forEach(link => {
+      link.onclick = function() {
+        const idx = parseInt(link.getAttribute('data-pizza'), 10) - 1;
+        openPizzaEditModal(idx);
+        // If a custom name was set, use it
+        const customName = link.getAttribute('data-pizza-name');
+        if (customName) {
+          document.getElementById('pizza-edit-title').value = customName;
+        }
+      };
+    });
+
+    // Add function to update pizza menu cards
+    function updatePizzaMenuCards() {
+      const container = document.getElementById('pizza-menu-container');
+      container.innerHTML = '';
+      
+      for (let i = 1; i <= 3; i++) {
+        const pizzaName = pizzaNames[i-1] || `Pizza ${i}`;
+        const totalCost = document.getElementById(`p${i}-cost`).textContent;
+        const price = document.getElementById(`p${i}-price`).value;
+        const profit = document.getElementById(`p${i}-profit`).textContent;
+        
+        // Get current recipe
+        const recipe = {};
+        INGREDIENTS.forEach(ing => {
+          recipe[ing] = parseInt(document.getElementById(`p${i}-${ing}`).value, 10);
+        });
+        
+        const card = document.createElement('div');
+        card.className = 'pizza-card';
+        card.innerHTML = `
+          <div class="pizza-name">${pizzaName}</div>
+          <div class="pizza-visual">
+            <div class="pizza-crust"></div>
+            <div class="pizza-sauce"></div>
+            <div class="pizza-cheese"></div>
+            <div class="pizza-toppings" id="menu-pizza-${i}-toppings"></div>
+          </div>
+          <div class="pizza-stats">
+            <div class="stat-row">
+              <span class="stat-label">Total Cost:</span>
+              <span class="stat-value">$${totalCost}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Price:</span>
+              <span class="stat-value">$${price}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Profit:</span>
+              <span class="stat-value">$${profit}</span>
+            </div>
+          </div>
+          <button class="edit-button" onclick="openPizzaEditModal(${i-1})">Edit Pizza</button>
+        `;
+        
+        container.appendChild(card);
+        
+        // Update pizza visual
+        const toppingsContainer = card.querySelector(`#menu-pizza-${i}-toppings`);
+        updatePizzaVisualForMenu(recipe, toppingsContainer);
+      }
+    }
+    
+    // Modified version of updatePizzaVisual for menu cards
+    function updatePizzaVisualForMenu(ingredients, toppingsContainer) {
+      toppingsContainer.innerHTML = '';
+      
+      const totalIngredients = Object.values(ingredients).reduce((sum, qty) => sum + qty, 0);
+      
+      Object.entries(ingredients).forEach(([ing, qty]) => {
+        for (let i = 0; i < qty; i++) {
+          const topping = document.createElement('div');
+          topping.className = 'topping';
+          topping.textContent = INGREDIENT_EMOJIS[ing];
+          
+          const angle = (i / qty) * Math.PI * 2;
+          const radius = 60 * (1 - (totalIngredients - qty) / (totalIngredients * 2));
+          const x = Math.cos(angle) * radius;
+          const y = Math.sin(angle) * radius;
+          
+          topping.style.transform = `translate(${x}px, ${y}px)`;
+          toppingsContainer.appendChild(topping);
+        }
+      });
+    }
+    
+    // Modify updatePizzaCosts to also update the menu cards
+    const originalUpdatePizzaCosts = updatePizzaCosts;
+    updatePizzaCosts = function() {
+      originalUpdatePizzaCosts();
+      updatePizzaMenuCards();
+    };
+    
+    // Initial setup of pizza menu cards
+    updatePizzaMenuCards();
+    
+    // Update pizza menu cards when pizza names change
+    document.getElementById('pizza-edit-done').onclick = function() {
+      // Original modal close logic
+      INGREDIENTS.forEach(ing => {
+        const qty = parseInt(document.querySelector(`.pizza-edit-qty[data-ing='${ing}']`).textContent, 10);
+        document.getElementById(`p${pizzaIndex+1}-${ing}`).value = qty;
+      });
+      document.getElementById(`p${pizzaIndex+1}-price`).value = parseInt(document.getElementById('pizza-edit-price').value, 10);
+      const newName = document.getElementById('pizza-edit-title').value.trim() || `Pizza ${pizzaIndex+1}`;
+      const pizzaLink = document.querySelector(`.pizza-edit-link[data-pizza='${pizzaIndex+1}']`);
+      pizzaLink.textContent = newName;
+      pizzaLink.setAttribute('data-pizza-name', newName);
+      pizzaNames[pizzaIndex] = newName;
+      updatePizzaCosts();
+      document.getElementById('pizza-edit-modal').style.display = 'none';
+      
+      // Update the menu cards
+      updatePizzaMenuCards();
+    };
   </script>
 </body>
 </html> 
