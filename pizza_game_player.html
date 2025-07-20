@@ -118,21 +118,22 @@
     /* New Pizza Menu Card Styles */
     .pizza-menu-container {
       display: flex;
-      gap: 20px;
+      gap: 15px;
       justify-content: center;
       margin: 30px 0;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
     }
     
     .pizza-card {
       background: #fff;
       border-radius: 16px;
-      padding: 20px;
-      width: 280px;
+      padding: 15px;
+      width: 220px;
       box-shadow: 0 8px 16px rgba(0,0,0,0.1);
       transition: transform 0.2s ease;
       position: relative;
       border: 2px solid #ffe5b4;
+      flex-shrink: 0;
     }
     
     .pizza-card:hover {
@@ -140,33 +141,33 @@
     }
     
     .pizza-card .pizza-name {
-      font-size: 1.4em;
+      font-size: 1.2em;
       font-weight: bold;
       color: #b33c00;
       text-align: center;
-      margin-bottom: 15px;
-      padding-bottom: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
       border-bottom: 2px solid #ffe5b4;
     }
     
     .pizza-card .pizza-visual {
-      width: 180px;
-      height: 180px;
-      margin: 0 auto 15px;
+      width: 140px;
+      height: 140px;
+      margin: 0 auto 12px;
     }
     
     .pizza-card .pizza-stats {
       background: #fff3e0;
       border-radius: 8px;
-      padding: 12px;
-      margin: 10px 0;
+      padding: 10px;
+      margin: 8px 0;
     }
     
     .pizza-card .stat-row {
       display: flex;
       justify-content: space-between;
-      margin: 5px 0;
-      font-size: 1.1em;
+      margin: 4px 0;
+      font-size: 1em;
     }
     
     .pizza-card .stat-label {
@@ -182,13 +183,13 @@
       background: #b33c00;
       color: white;
       border: none;
-      padding: 10px 20px;
+      padding: 8px 16px;
       border-radius: 8px;
       width: 100%;
-      font-size: 1.1em;
+      font-size: 1em;
       cursor: pointer;
       transition: background 0.2s ease;
-      margin-top: 15px;
+      margin-top: 12px;
     }
     
     .pizza-card .edit-button:hover {
@@ -215,11 +216,11 @@
     .interior-flex {
       display: flex;
       width: 100%;
-      max-width: 900px;
+      max-width: 1200px;
       min-height: 380px;
     }
     .shop-street {
-      width: 120px;
+      width: 100px;
       background: #444c57;
       display: flex;
       flex-direction: column;
@@ -282,6 +283,62 @@
       position: relative;
       min-height: 380px;
       background: #2d5c4d;
+      margin-right: 20px;
+    }
+    
+    /* Gameplay UI Section Styles */
+    .gameplay-ui-section {
+      width: 280px;
+      background: #fffbe9;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      border: 2px solid #ffe5b4;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      min-height: 380px;
+    }
+    
+    .gameplay-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #ffe5b4;
+    }
+    
+    .gameplay-top-row .day-counter {
+      font-size: 1.1em;
+      font-weight: bold;
+      color: #b33c00;
+      margin: 0;
+    }
+    
+    .gameplay-top-row .cash-display {
+      margin: 0;
+      font-size: 1em;
+      padding: 8px 12px;
+    }
+    
+    .gameplay-daily-report {
+      text-align: center;
+    }
+    
+    .gameplay-edit-menu {
+      text-align: center;
+    }
+    
+    .gameplay-bottom-row {
+      display: flex;
+      gap: 10px;
+      margin-top: auto;
+    }
+    
+    .gameplay-bottom-row .button {
+      flex: 1;
+      font-size: 0.9em;
+      padding: 8px 12px;
     }
     .kitchen-row {
       display: flex;
@@ -468,7 +525,10 @@
       margin-top: 2px;
     }
     @media (max-width: 700px) {
-      .interior-flex { max-width: 100vw; }
+      .interior-flex { 
+        max-width: 100vw; 
+        flex-direction: column;
+      }
       .shop-street { width: 60px; }
       .awning { width: 40px; height: 16px; }
       .stripe { width: 13px; }
@@ -476,6 +536,18 @@
       .shop-grid { grid-template-columns: repeat(2, 70px); grid-template-rows: repeat(2, 40px); grid-gap: 12px 10px; }
       .table { width: 36px; height: 18px; font-size: 1em; }
       .entrance-door { font-size: 1.1em; padding: 1px 4px; }
+      .gameplay-ui-section {
+        width: 100%;
+        margin-top: 20px;
+        min-height: auto;
+      }
+      .gameplay-top-row {
+        flex-direction: column;
+        gap: 10px;
+      }
+      .gameplay-bottom-row {
+        flex-direction: column;
+      }
     }
     /* Daily Report Modal Styles */
     .daily-report-modal {
@@ -708,103 +780,116 @@
           <div class="entrance-door">🚪</div>
         </div>
       </div>
+      <!-- New Gameplay UI Section -->
+      <div class="gameplay-ui-section">
+        <!-- Top Row: Cash Display and Day Counter -->
+        <div class="gameplay-top-row">
+          <div class="day-counter" id="gameplay-day-counter">Day: <span id="current-day">1</span> of 5</div>
+          <div class="cash-display" id="gameplay-cash-display">Cash: $100 USD</div>
+        </div>
+        
+        <!-- Daily Report Button -->
+        <div class="gameplay-daily-report">
+          <button class="button" id="daily-report-button" onclick="showLastDailyReport()" disabled>Daily Report</button>
+        </div>
+        
+        <!-- Edit Pizza Menu Button -->
+        <div class="gameplay-edit-menu">
+          <button class="button" id="edit-pizza-menu-button" onclick="openPizzaMenuModal()">Edit Pizza Menu</button>
+        </div>
+        
+        <!-- Marketing Controls -->
+        <div class="marketing-controls" style="margin: 15px 0; padding: 15px; background: #fff3e0; border-radius: 8px;">
+          <h3 style="margin-top: 0; color: #b33c00;">Marketing Activity (Optional)</h3>
+          <div style="margin-bottom: 10px;">
+            <label style="display: block; margin-bottom: 5px;">Activity Type:</label>
+            <select id="marketing-type" style="padding: 5px; margin-right: 10px;">
+              <option value="none">No Marketing</option>
+              <option value="flyer">Flyer Drop ($5)</option>
+              <option value="social">Social Media Ads ($15)</option>
+              <option value="mascot">Street Mascot ($30)</option>
+            </select>
+            
+            <select id="marketing-target" style="padding: 5px;" disabled>
+              <option value="">Select Target Segment</option>
+              <option value="Student">Students</option>
+              <option value="Tourist">Tourists</option>
+              <option value="Healthy Eater">Healthy Eaters</option>
+              <option value="Gourmet Eater">Gourmet Eaters</option>
+            </select>
+          </div>
+          <div id="marketing-cost" style="font-weight: bold; color: #b33c00;"></div>
+        </div>
+        
+        <!-- Bottom Row: Simulate and Next Day Buttons -->
+        <div class="gameplay-bottom-row">
+          <button class="button" id="simulate-button" onclick="simulateDay()">Simulate Day</button>
+          <button class="button" id="next-day-button" onclick="nextDay()" disabled>Next Day</button>
+        </div>
+      </div>
     </div>
   </div>
   <h1>Pizza Menu Game Prototype</h1>
-  <div style="display: flex; align-items: center; margin-bottom: 20px;">
-    <h2 style="margin: 0;">Ingredients (Unit Cost)</h2>
-    <div class="cash-display" id="cash-display">Cash: $100 USD</div>
-  </div>
-  <table id="ingredients-table">
-    <tr>
-      <th>Ingredient</th>
-      <th>Unit Cost (USD)</th>
-    </tr>
-    <tr><td>Cheese</td><td><input type="number" id="cost-cheese" value="2" min="1"></td></tr>
-    <tr><td>Tomatoes</td><td><input type="number" id="cost-tomatoes" value="1" min="1"></td></tr>
-    <tr><td>Veggies</td><td><input type="number" id="cost-veggies" value="2" min="1"></td></tr>
-    <tr><td>Pepperoni</td><td><input type="number" id="cost-pepperoni" value="3" min="1"></td></tr>
-  </table>
-
-  <h2>Pizza Menu (Edit Recipes & Price)</h2>
   
-  <!-- New Pizza Menu UI -->
-  <div class="pizza-menu-container" id="pizza-menu-container">
-    <!-- Pizza cards will be dynamically inserted here -->
+  <!-- Hidden elements for data management -->
+  <div style="display: none;">
+    <table id="ingredients-table">
+      <tr>
+        <th>Ingredient</th>
+        <th>Unit Cost (USD)</th>
+      </tr>
+      <tr><td>Cheese</td><td><input type="number" id="cost-cheese" value="1" min="1"></td></tr>
+      <tr><td>Tomatoes</td><td><input type="number" id="cost-tomatoes" value="1" min="1"></td></tr>
+      <tr><td>Veggies</td><td><input type="number" id="cost-veggies" value="1" min="1"></td></tr>
+      <tr><td>Pepperoni</td><td><input type="number" id="cost-pepperoni" value="1" min="1"></td></tr>
+    </table>
+
+    <!-- Original table (hidden but kept for data management) -->
+    <table id="pizza-table">
+      <tr>
+        <th>Pizza</th>
+        <th>Cheese</th>
+        <th>Tomatoes</th>
+        <th>Veggies</th>
+        <th>Pepperoni</th>
+        <th>Price (USD)</th>
+        <th>Total Cost (USD)</th>
+        <th>Profit (USD)</th>
+      </tr>
+      <tr>
+        <td><span class="pizza-edit-link" data-pizza="1" style="cursor:pointer; color:#b33c00; text-decoration:underline;">Pizza 1</span></td>
+        <td><input type="number" id="p1-cheese" value="3" min="0" onchange="updatePizzaCosts()"></td>
+        <td><input type="number" id="p1-tomatoes" value="2" min="0" onchange="updatePizzaCosts()"></td>
+        <td><input type="number" id="p1-veggies" value="1" min="0" onchange="updatePizzaCosts()"></td>
+        <td><input type="number" id="p1-pepperoni" value="4" min="0" onchange="updatePizzaCosts()"></td>
+        <td><input type="number" id="p1-price" value="15" min="1" onchange="updatePizzaCosts()"></td>
+        <td id="p1-cost">0</td>
+        <td id="p1-profit">0</td>
+      </tr>
+      <tr>
+        <td><span class="pizza-edit-link" data-pizza="2" style="cursor:pointer; color:#b33c00; text-decoration:underline;">Pizza 2</span></td>
+        <td><input type="number" id="p2-cheese" value="0" min="0" onchange="updatePizzaCosts()"></td>
+        <td><input type="number" id="p2-tomatoes" value="1" min="0" onchange="updatePizzaCosts()"></td>
+        <td><input type="number" id="p2-veggies" value="4" min="0" onchange="updatePizzaCosts()"></td>
+        <td><input type="number" id="p2-pepperoni" value="2" min="0" onchange="updatePizzaCosts()"></td>
+        <td><input type="number" id="p2-price" value="13" min="1" onchange="updatePizzaCosts()"></td>
+        <td id="p2-cost">0</td>
+        <td id="p2-profit">0</td>
+      </tr>
+      <tr>
+        <td><span class="pizza-edit-link" data-pizza="3" style="cursor:pointer; color:#b33c00; text-decoration:underline;">Pizza 3</span></td>
+        <td><input type="number" id="p3-cheese" value="2" min="0" onchange="updatePizzaCosts()"></td>
+        <td><input type="number" id="p3-tomatoes" value="3" min="0" onchange="updatePizzaCosts()"></td>
+        <td><input type="number" id="p3-veggies" value="2" min="0" onchange="updatePizzaCosts()"></td>
+        <td><input type="number" id="p3-pepperoni" value="1" min="0" onchange="updatePizzaCosts()"></td>
+        <td><input type="number" id="p3-price" value="12" min="1" onchange="updatePizzaCosts()"></td>
+        <td id="p3-cost">0</td>
+        <td id="p3-profit">0</td>
+      </tr>
+    </table>
   </div>
-  
-  <!-- Original table (hidden but kept for data management) -->
-  <table id="pizza-table">
-    <tr>
-      <th>Pizza</th>
-      <th>Cheese</th>
-      <th>Tomatoes</th>
-      <th>Veggies</th>
-      <th>Pepperoni</th>
-      <th>Price (USD)</th>
-      <th>Total Cost (USD)</th>
-      <th>Profit (USD)</th>
-    </tr>
-    <tr>
-      <td><span class="pizza-edit-link" data-pizza="1" style="cursor:pointer; color:#b33c00; text-decoration:underline;">Pizza 1</span></td>
-      <td><input type="number" id="p1-cheese" value="3" min="0" onchange="updatePizzaCosts()"></td>
-      <td><input type="number" id="p1-tomatoes" value="2" min="0" onchange="updatePizzaCosts()"></td>
-      <td><input type="number" id="p1-veggies" value="1" min="0" onchange="updatePizzaCosts()"></td>
-      <td><input type="number" id="p1-pepperoni" value="4" min="0" onchange="updatePizzaCosts()"></td>
-      <td><input type="number" id="p1-price" value="15" min="1" onchange="updatePizzaCosts()"></td>
-      <td id="p1-cost">0</td>
-      <td id="p1-profit">0</td>
-    </tr>
-    <tr>
-      <td><span class="pizza-edit-link" data-pizza="2" style="cursor:pointer; color:#b33c00; text-decoration:underline;">Pizza 2</span></td>
-      <td><input type="number" id="p2-cheese" value="0" min="0" onchange="updatePizzaCosts()"></td>
-      <td><input type="number" id="p2-tomatoes" value="1" min="0" onchange="updatePizzaCosts()"></td>
-      <td><input type="number" id="p2-veggies" value="4" min="0" onchange="updatePizzaCosts()"></td>
-      <td><input type="number" id="p2-pepperoni" value="2" min="0" onchange="updatePizzaCosts()"></td>
-      <td><input type="number" id="p2-price" value="13" min="1" onchange="updatePizzaCosts()"></td>
-      <td id="p2-cost">0</td>
-      <td id="p2-profit">0</td>
-    </tr>
-    <tr>
-      <td><span class="pizza-edit-link" data-pizza="3" style="cursor:pointer; color:#b33c00; text-decoration:underline;">Pizza 3</span></td>
-      <td><input type="number" id="p3-cheese" value="2" min="0" onchange="updatePizzaCosts()"></td>
-      <td><input type="number" id="p3-tomatoes" value="3" min="0" onchange="updatePizzaCosts()"></td>
-      <td><input type="number" id="p3-veggies" value="2" min="0" onchange="updatePizzaCosts()"></td>
-      <td><input type="number" id="p3-pepperoni" value="1" min="0" onchange="updatePizzaCosts()"></td>
-      <td><input type="number" id="p3-price" value="12" min="1" onchange="updatePizzaCosts()"></td>
-      <td id="p3-cost">0</td>
-      <td id="p3-profit">0</td>
-    </tr>
-  </table>
 
-  <div class="simulation-controls">
-    <div class="day-counter">Day: <span id="current-day">1</span> of 5</div>
-    
-    <div class="marketing-controls" style="margin: 15px 0; padding: 15px; background: #fff3e0; border-radius: 8px;">
-      <h3 style="margin-top: 0; color: #b33c00;">Marketing Activity (Optional)</h3>
-      <div style="margin-bottom: 10px;">
-        <label style="display: block; margin-bottom: 5px;">Activity Type:</label>
-        <select id="marketing-type" style="padding: 5px; margin-right: 10px;">
-          <option value="none">No Marketing</option>
-          <option value="flyer">Flyer Drop ($5)</option>
-          <option value="social">Social Media Ads ($15)</option>
-          <option value="mascot">Street Mascot ($30)</option>
-        </select>
-        
-        <select id="marketing-target" style="padding: 5px;" disabled>
-          <option value="">Select Target Segment</option>
-          <option value="Student">Students</option>
-          <option value="Tourist">Tourists</option>
-          <option value="Healthy Eater">Healthy Eaters</option>
-          <option value="Gourmet Eater">Gourmet Eaters</option>
-        </select>
-      </div>
-      <div id="marketing-cost" style="font-weight: bold; color: #b33c00;"></div>
-    </div>
-
-    <button class="button" id="simulate-button" onclick="simulateDay()">Simulate Day</button>
-    <button class="button" id="next-day-button" onclick="nextDay()" disabled>Next Day</button>
-    <button class="button" id="daily-report-button" onclick="showLastDailyReport()" disabled>Daily Report</button>
+  <div class="simulation-controls" style="margin: 20px 0;">
     <button class="button" id="reset-button" onclick="resetSimulation()">Reset Simulation</button>
   </div>
 
@@ -819,6 +904,17 @@
   <div class="simulation-summary" id="simulation-summary" style="display:none;">
     <h2>Simulation Summary</h2>
     <div id="summary-content"></div>
+  </div>
+
+  <!-- Pizza Menu Modal -->
+  <div id="pizza-menu-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.25); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#fffbe9; border-radius:18px; box-shadow:0 4px 24px #bfae8e; padding:32px 40px; width:90%; max-width:1000px; max-height:90vh; overflow-y:auto; position:relative;">
+      <button onclick="closePizzaMenuModal()" style="position:absolute; top:18px; right:18px; background:none; border:none; font-size:1.5em; cursor:pointer; color:#b33c00;">&times;</button>
+      <h2 style="color:#b33c00; margin-bottom:24px; text-align:center;">Edit Pizza Menu</h2>
+      <div class="pizza-menu-container" id="modal-pizza-menu-container">
+        <!-- Pizza cards will be dynamically inserted here -->
+      </div>
+    </div>
   </div>
 
   <!-- Minami Lane-style Pizza Edit Modal -->
@@ -1016,7 +1112,7 @@
     let playerCash = 100; // Starting cash
 
     function updateCashDisplay() {
-      const cashDisplay = document.getElementById('cash-display');
+      const cashDisplay = document.getElementById('gameplay-cash-display');
       cashDisplay.textContent = `Cash: $${playerCash} USD`;
       cashDisplay.classList.toggle('low', playerCash < 30); // Red if less than cheapest marketing
     }
@@ -1061,13 +1157,25 @@
         const cost = MARKETING_COSTS[this.value];
         if (playerCash >= cost) {
           targetSelect.disabled = false;
-          costDisplay.textContent = `Cost: $${cost} USD`;
+          targetSelect.value = ''; // Reset target selection
+          costDisplay.textContent = `Cost: $${cost} USD - Don't forget to select the target segment`;
         } else {
           this.value = 'none';
           targetSelect.disabled = true;
           targetSelect.value = '';
           costDisplay.textContent = '';
         }
+      }
+    });
+
+    // Update marketing target change handler
+    document.getElementById('marketing-target').addEventListener('change', function() {
+      const marketingType = document.getElementById('marketing-type').value;
+      const costDisplay = document.getElementById('marketing-cost');
+      
+      if (this.value && marketingType !== 'none') {
+        const cost = MARKETING_COSTS[marketingType];
+        costDisplay.textContent = `Cost: $${cost} USD - Ready to launch!`;
       }
     });
 
@@ -1149,6 +1257,12 @@
       const marketingTarget = document.getElementById('marketing-target').value;
       let marketingCost = 0;
       let marketingEffect = 1;
+      
+      // Validate marketing selection
+      if (marketingType !== 'none' && !marketingTarget) {
+        alert('Please select a target segment for your marketing activity!');
+        return;
+      }
       
       if (marketingType !== 'none' && marketingTarget) {
         marketingCost = MARKETING_COSTS[marketingType];
@@ -1359,8 +1473,6 @@
       // Update results display to show cash
       if (marketingType !== 'none') {
         resultsHTML = `<div class="feedback" style="margin-bottom: 15px;">
-          <b>Marketing Activity:</b> ${marketingType.charAt(0).toUpperCase() + marketingType.slice(1)} 
-          targeting ${marketingTarget} (Cost: $${marketingCost})<br>
           <b>Remaining Cash:</b> $${playerCash} USD
         </div>` + resultsHTML;
       } else {
@@ -1624,9 +1736,9 @@
         const row = document.createElement('div');
         row.style.display = 'flex';
         row.style.alignItems = 'center';
-        row.style.marginBottom = '8px';
+        row.style.marginBottom = '15px';
         row.innerHTML = `
-          <span style="width:90px; display:inline-block; font-weight:bold; color:#b33c00;">
+          <span style="width:120px; display:inline-block; font-weight:bold; color:#b33c00;">
             ${INGREDIENT_EMOJIS[ing]} ${ing.charAt(0).toUpperCase()+ing.slice(1)}
           </span>
           <button class="pizza-edit-minus" data-ing="${ing}" style="background:#ffe5b4; border:none; border-radius:50%; width:32px; height:32px; font-size:1.3em; color:#b33c00; margin:0 8px;">-</button>
@@ -1727,9 +1839,16 @@
       };
     });
 
-    // Add function to update pizza menu cards
+    // Add function to update pizza menu cards (now only updates modal)
     function updatePizzaMenuCards() {
-      const container = document.getElementById('pizza-menu-container');
+      // This function is now deprecated since we only use the modal
+      // The modal is updated separately via updateModalPizzaMenuCards()
+      return;
+    }
+    
+    // Add function to update modal pizza menu cards
+    function updateModalPizzaMenuCards() {
+      const container = document.getElementById('modal-pizza-menu-container');
       container.innerHTML = '';
       
       for (let i = 1; i <= 3; i++) {
@@ -1752,7 +1871,7 @@
             <div class="pizza-crust"></div>
             <div class="pizza-sauce"></div>
             <div class="pizza-cheese"></div>
-            <div class="pizza-toppings" id="menu-pizza-${i}-toppings"></div>
+            <div class="pizza-toppings" id="modal-menu-pizza-${i}-toppings"></div>
           </div>
           <div class="pizza-stats">
             <div class="stat-row">
@@ -1774,9 +1893,19 @@
         container.appendChild(card);
         
         // Update pizza visual
-        const toppingsContainer = card.querySelector(`#menu-pizza-${i}-toppings`);
+        const toppingsContainer = card.querySelector(`#modal-menu-pizza-${i}-toppings`);
         updatePizzaVisualForMenu(recipe, toppingsContainer);
       }
+    }
+    
+    // Pizza Menu Modal Functions
+    function openPizzaMenuModal() {
+      updateModalPizzaMenuCards();
+      document.getElementById('pizza-menu-modal').style.display = 'flex';
+    }
+    
+    function closePizzaMenuModal() {
+      document.getElementById('pizza-menu-modal').style.display = 'none';
     }
     
     // Modified version of updatePizzaVisual for menu cards
@@ -1806,11 +1935,10 @@
     const originalUpdatePizzaCosts = updatePizzaCosts;
     updatePizzaCosts = function() {
       originalUpdatePizzaCosts();
-      updatePizzaMenuCards();
+      updateModalPizzaMenuCards();
     };
     
-    // Initial setup of pizza menu cards
-    updatePizzaMenuCards();
+    // Initial setup - no longer needed since we use modal
     
     // Update pizza menu cards when pizza names change
     document.getElementById('pizza-edit-done').onclick = function() {
@@ -1828,8 +1956,8 @@
       updatePizzaCosts();
       document.getElementById('pizza-edit-modal').style.display = 'none';
       
-      // Update the menu cards
-      updatePizzaMenuCards();
+              // Update modal menu cards
+        updateModalPizzaMenuCards();
     };
 
     // Add Daily Report Modal Functions
@@ -1864,6 +1992,36 @@
         return sum + (pizza.price - pizzaCost);
       }, 0);
       document.getElementById('daily-total-profit').textContent = totalProfit;
+      
+      // Add marketing activity and remaining cash information to Sales tab
+      const salesTab = document.getElementById('sales-tab');
+      const pizzaSalesGrid = salesTab.querySelector('#pizza-sales-grid');
+      
+      // Remove any existing marketing activity elements
+      const existingMarketingElements = salesTab.querySelectorAll('.feedback');
+      existingMarketingElements.forEach(el => {
+        if (el.textContent.includes('Marketing Activity') || el.textContent.includes('Remaining Cash')) {
+          el.remove();
+        }
+      });
+      
+      // Create marketing activity element
+      let marketingHTML = '';
+      if (dayResult.marketing) {
+        marketingHTML = `<div class="feedback" style="margin-bottom: 15px;">
+          <b>Marketing Activity:</b> ${dayResult.marketing.type.charAt(0).toUpperCase() + dayResult.marketing.type.slice(1)} 
+          targeting ${dayResult.marketing.target} (Cost: $${dayResult.marketing.cost})<br>
+          <b>Remaining Cash:</b> $${playerCash} USD
+        </div>`;
+      } else {
+        marketingHTML = `<div class="feedback" style="margin-bottom: 15px;">
+          <b>Remaining Cash:</b> $${playerCash} USD
+        </div>`;
+      }
+      
+      // Insert marketing activity after sales summary and before pizza sales grid
+      const salesSummary = salesTab.querySelector('.sales-summary');
+      salesSummary.insertAdjacentHTML('afterend', marketingHTML);
       
       // Update Sales Tab
       const salesGrid = document.getElementById('pizza-sales-grid');
