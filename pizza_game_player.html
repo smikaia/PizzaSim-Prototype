@@ -804,6 +804,7 @@
 
     <button class="button" id="simulate-button" onclick="simulateDay()">Simulate Day</button>
     <button class="button" id="next-day-button" onclick="nextDay()" disabled>Next Day</button>
+    <button class="button" id="daily-report-button" onclick="showLastDailyReport()" disabled>Daily Report</button>
     <button class="button" id="reset-button" onclick="resetSimulation()">Reset Simulation</button>
   </div>
 
@@ -859,6 +860,9 @@
   <div id="daily-report-modal" class="daily-report-modal">
     <div class="daily-report-content">
       <button class="daily-report-close" onclick="closeDailyReport()">&times;</button>
+      <div style="text-align: center; margin-bottom: 24px;">
+        <h1 style="color: #b33c00; margin: 0; font-size: 2em;">Day <span id="daily-report-day">1</span> Report</h1>
+      </div>
       <div class="daily-report-tabs">
         <div class="daily-report-tab active" onclick="switchDailyReportTab('sales')">Sales</div>
         <div class="daily-report-tab" onclick="switchDailyReportTab('satisfaction')">Satisfaction</div>
@@ -1406,6 +1410,7 @@
       currentDayView = 1;
       simulationComplete = false;
       dayResults = [];
+      lastDailyReport = null; // Clear the last report
       // Reset visited customers tracking
       CUSTOMER_SEGMENTS.forEach(segment => {
         visitedCustomers[segment.name].clear();
@@ -1413,6 +1418,7 @@
       document.getElementById('current-day').textContent = currentDay;
       document.getElementById('simulate-button').disabled = false;
       document.getElementById('next-day-button').disabled = true;
+      document.getElementById('daily-report-button').disabled = true; // Disable the button
       document.getElementById('results').style.display = 'none';
       document.getElementById('simulation-summary').style.display = 'none';
       document.getElementById('marketing-type').value = 'none';
@@ -1827,9 +1833,25 @@
     };
 
     // Add Daily Report Modal Functions
+    // Add variable to track last daily report
+    let lastDailyReport = null;
+
+    // Modify showDailyReport to store the report data
     function showDailyReport(dayResult) {
+      // Store the report data for later use
+      lastDailyReport = dayResult;
+      
       const modal = document.getElementById('daily-report-modal');
       modal.style.display = 'flex';
+      
+      // Enable the daily report button
+      document.getElementById('daily-report-button').disabled = false;
+      
+      // Update the day number in the title
+      document.getElementById('daily-report-day').textContent = dayResult.day;
+      
+      // Always reset to Sales tab by default
+      switchDailyReportTab('sales');
       
       // Calculate and display total profit
       const ingredientCosts = getIngredientCosts();
@@ -1956,6 +1978,12 @@
         `;
         satisfactionGrid.appendChild(card);
       });
+    }
+    
+    function showLastDailyReport() {
+      if (lastDailyReport) {
+        showDailyReport(lastDailyReport);
+      }
     }
     
     function closeDailyReport() {
