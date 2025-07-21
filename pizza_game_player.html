@@ -910,10 +910,9 @@
           <div id="marketing-cost" style="font-weight: bold; color: #b33c00;"></div>
         </div>
         
-        <!-- Bottom Row: Simulate and Next Day Buttons -->
+        <!-- Bottom Row: Start Day Button -->
         <div class="gameplay-bottom-row">
-          <button class="button" id="simulate-button" onclick="simulateDay()">Simulate Day</button>
-          <button class="button" id="next-day-button" onclick="nextDay()" disabled>Next Day</button>
+          <button class="button" id="simulate-button" onclick="simulateDay()">Start Day</button>
         </div>
       </div>
     </div>
@@ -1331,6 +1330,10 @@
     // Refactor simulateDay to animate customers
     async function simulateDay() {
       if (currentDay > 5 || simulationComplete) return;
+      
+      // Hide the Start Day button during simulation
+      document.getElementById('simulate-button').style.display = 'none';
+      
       // Clear any previous avatars
       document.querySelectorAll('.seated-customer').forEach(cell => cell.innerHTML = '');
       document.getElementById('customer-queue').innerHTML = '';
@@ -1576,15 +1579,8 @@
       document.getElementById('results').style.display = 'block';
       document.getElementById('day-navigation').style.display = 'block';
       
-      // Update simulation state
-      document.getElementById('simulate-button').disabled = true;
-      document.getElementById('next-day-button').disabled = false;
-      
-      if (currentDay === 5) {
-        simulationComplete = true;
-        document.getElementById('next-day-button').disabled = true;
-        updateSimulationSummary();
-      }
+      // Show the Start Day button again after simulation
+      document.getElementById('simulate-button').style.display = 'block';
 
       // Show daily report
       showDailyReport(dayResult);
@@ -1595,8 +1591,6 @@
         currentDay++;
         currentDayView = currentDay;
         document.getElementById('current-day').textContent = currentDay;
-        document.getElementById('simulate-button').disabled = false;
-        document.getElementById('next-day-button').disabled = true;
         document.getElementById('results').style.display = 'none';
         document.getElementById('marketing-type').value = 'none';
         document.getElementById('marketing-target').value = '';
@@ -1612,13 +1606,13 @@
       simulationComplete = false;
       dayResults = [];
       lastDailyReport = null; // Clear the last report
+      dailyReportOpenedAutomatically = false; // Reset the flag
       // Reset visited customers tracking
       CUSTOMER_SEGMENTS.forEach(segment => {
         visitedCustomers[segment.name].clear();
       });
       document.getElementById('current-day').textContent = currentDay;
-      document.getElementById('simulate-button').disabled = false;
-      document.getElementById('next-day-button').disabled = true;
+      document.getElementById('simulate-button').style.display = 'block';
       document.getElementById('daily-report-button').disabled = true; // Disable the button
       document.getElementById('results').style.display = 'none';
       document.getElementById('simulation-summary').style.display = 'none';
@@ -2052,11 +2046,16 @@
     // Add Daily Report Modal Functions
     // Add variable to track last daily report
     let lastDailyReport = null;
+    // Add flag to track if daily report was opened automatically or manually
+    let dailyReportOpenedAutomatically = false;
 
     // Modify showDailyReport to store the report data
     function showDailyReport(dayResult) {
       // Store the report data for later use
       lastDailyReport = dayResult;
+      
+      // Mark that this daily report was opened automatically
+      dailyReportOpenedAutomatically = true;
       
       const modal = document.getElementById('daily-report-modal');
       modal.style.display = 'flex';
@@ -2229,12 +2228,199 @@
     
     function showLastDailyReport() {
       if (lastDailyReport) {
-        showDailyReport(lastDailyReport);
+        // Store the report data for later use
+        const dayResult = lastDailyReport;
+        
+        // Mark that this daily report was opened manually
+        dailyReportOpenedAutomatically = false;
+        
+        const modal = document.getElementById('daily-report-modal');
+        modal.style.display = 'flex';
+        
+        // Enable the daily report button
+        document.getElementById('daily-report-button').disabled = false;
+        
+        // Update the day number in the title
+        document.getElementById('daily-report-day').textContent = dayResult.day;
+        
+        // Always reset to Sales tab by default
+        switchDailyReportTab('sales');
+        
+        // Calculate and display total profit
+        const ingredientCosts = getIngredientCosts();
+        const totalProfit = dayResult.customers.reduce((sum, customer) => {
+          const pizza = getPizzaData()[customer.pizzaIndex];
+          // Calculate cost of ingredients for this pizza
+          const pizzaCost = INGREDIENTS.reduce((cost, ing) => {
+            return cost + (pizza.recipe[ing] * ingredientCosts[ing]);
+          }, 0);
+          return sum + (pizza.price - pizzaCost);
+        }, 0);
+        document.getElementById('daily-total-profit').textContent = totalProfit;
+        
+        // Add marketing activity and remaining cash information to Sales tab
+        const salesTab = document.getElementById('sales-tab');
+        const pizzaSalesGrid = salesTab.querySelector('#pizza-sales-grid');
+        
+        // Remove any existing marketing activity elements
+        const existingMarketingElements = salesTab.querySelectorAll('.feedback');
+        existingMarketingElements.forEach(el => {
+          if (el.textContent.includes('Marketing Activity') || el.textContent.includes('Remaining Cash')) {
+            el.remove();
+          }
+        });
+        
+        // Create marketing activity element
+        let marketingHTML = '';
+        if (dayResult.marketing) {
+          marketingHTML = `<div class="feedback" style="margin-bottom: 15px;">
+            <b>Marketing Activity:</b> ${dayResult.marketing.type.charAt(0).toUpperCase() + dayResult.marketing.type.slice(1)} 
+            targeting ${dayResult.marketing.target} (Cost: $${dayResult.marketing.cost})<br>
+            <b>Remaining Cash:</b> $${playerCash} USD
+          </div>`;
+        } else {
+          marketingHTML = `<div class="feedback" style="margin-bottom: 15px;">
+            <b>Remaining Cash:</b> $${playerCash} USD
+          </div>`;
+        }
+        
+        // Insert marketing activity after sales summary and before pizza sales grid
+        const salesSummary = salesTab.querySelector('.sales-summary');
+        salesSummary.insertAdjacentHTML('afterend', marketingHTML);
+        
+        // Update Sales Tab
+        const salesGrid = document.getElementById('pizza-sales-grid');
+        salesGrid.innerHTML = '';
+        
+        // Count pizza sales and calculate profits
+        const pizzaStats = {};
+        dayResult.customers.forEach(customer => {
+          const pizza = getPizzaData()[customer.pizzaIndex];
+          if (!pizzaStats[pizza.name]) {
+            pizzaStats[pizza.name] = {
+              count: 0,
+              profit: 0,
+              recipe: pizza.recipe
+            };
+          }
+          pizzaStats[pizza.name].count++;
+          // Calculate profit for this pizza
+          const pizzaCost = INGREDIENTS.reduce((cost, ing) => {
+            return cost + (pizza.recipe[ing] * ingredientCosts[ing]);
+          }, 0);
+          pizzaStats[pizza.name].profit += (pizza.price - pizzaCost);
+        });
+        
+        // Create pizza sales cards
+        Object.entries(pizzaStats).forEach(([name, data]) => {
+          const card = document.createElement('div');
+          card.className = 'pizza-sales-card';
+          card.innerHTML = `
+            <div class="pizza-name">${name}</div>
+            <div class="pizza-visual">
+              <div class="pizza-crust"></div>
+              <div class="pizza-sauce"></div>
+              <div class="pizza-cheese"></div>
+              <div class="pizza-toppings"></div>
+            </div>
+            <div class="pizza-sales-stats">
+              <div class="pizza-sales-stat">
+                <span>Customers:</span>
+                <span>${data.count}</span>
+              </div>
+              <div class="pizza-sales-stat">
+                <span>Total Profit:</span>
+                <span>$${data.profit} USD</span>
+              </div>
+              <div class="pizza-sales-stat">
+                <span>Profit per Pizza:</span>
+                <span>$${(data.profit / data.count).toFixed(2)} USD</span>
+              </div>
+            </div>
+          `;
+          salesGrid.appendChild(card);
+          
+          // Update pizza visual
+          const toppingsContainer = card.querySelector('.pizza-toppings');
+          updatePizzaVisualForMenu(data.recipe, toppingsContainer);
+        });
+        
+        // Update Satisfaction Tab
+        const satisfactionGrid = document.getElementById('satisfaction-grid');
+        satisfactionGrid.innerHTML = '';
+        
+        // Group customers by segment to find most popular pizza and last feedback
+        const segmentData = {};
+        CUSTOMER_SEGMENTS.forEach(seg => {
+          segmentData[seg.name] = {
+            customers: [],
+            pizzaCounts: {},
+            lastFeedback: null
+          };
+        });
+        
+        // Process all customers to gather segment data
+        dayResult.customers.forEach(customer => {
+          const segment = customer.segment;
+          segmentData[segment].customers.push(customer);
+          const pizzaName = getPizzaData()[customer.pizzaIndex].name;
+          segmentData[segment].pizzaCounts[pizzaName] = (segmentData[segment].pizzaCounts[pizzaName] || 0) + 1;
+          segmentData[segment].lastFeedback = customer.feedback; // Keep updating with last customer's feedback
+        });
+        
+        CUSTOMER_SEGMENTS.forEach(seg => {
+          const avgSatisfaction = dayResult.segmentCounts[seg.name] > 0 ? 
+            (dayResult.segmentSatisfaction[seg.name] / dayResult.segmentCounts[seg.name]) : 0;
+          const coverage = (dayResult.segmentTotalServed[seg.name] / seg.totalCustomers) * 100;
+          const weightedScore = avgSatisfaction * (coverage / 100);
+          
+          // Find most popular pizza for this segment
+          const pizzaCounts = segmentData[seg.name].pizzaCounts;
+          const mostPopularPizza = Object.entries(pizzaCounts)
+            .sort((a, b) => b[1] - a[1])[0]?.[0] || 'None';
+          
+          const card = document.createElement('div');
+          card.className = 'segment-satisfaction-card';
+          card.innerHTML = `
+            <div class="segment-avatar">
+              <img src="${SEGMENT_AVATARS[seg.name]}" alt="${seg.name}">
+            </div>
+            <div class="segment-name">${seg.name}</div>
+            <div class="satisfaction-score">${weightedScore.toFixed(2)}</div>
+            <div class="satisfaction-label">Satisfaction Score</div>
+            <div style="margin-top: 15px; padding: 10px; background: #fff3e0; border-radius: 8px; width: 100%;">
+              <div style="margin-bottom: 8px;">
+                <span style="font-weight: bold; color: #b33c00;">Pizza of Choice:</span><br>
+                ${mostPopularPizza}
+              </div>
+              <div>
+                <span style="font-weight: bold; color: #b33c00;">Last Feedback:</span><br>
+                <span style="font-style: italic;">"${segmentData[seg.name].lastFeedback || 'No feedback'}"</span>
+              </div>
+            </div>
+          `;
+          satisfactionGrid.appendChild(card);
+        });
       }
     }
     
     function closeDailyReport() {
       document.getElementById('daily-report-modal').style.display = 'none';
+      
+      // Only automatically advance to next day if the report was opened automatically
+      if (dailyReportOpenedAutomatically) {
+        if (currentDay < 5 && !simulationComplete) {
+          nextDay();
+        } else if (currentDay === 5) {
+          // If it's the last day, mark simulation as complete and show summary
+          simulationComplete = true;
+          document.getElementById('simulate-button').style.display = 'none';
+          updateSimulationSummary();
+        }
+      }
+      
+      // Reset the flag after closing
+      dailyReportOpenedAutomatically = false;
     }
     
     function switchDailyReportTab(tab) {
