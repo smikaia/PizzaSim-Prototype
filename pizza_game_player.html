@@ -724,6 +724,65 @@
       color: #666;
       margin-top: 5px;
     }
+    /* Mini Satisfaction Section Styles */
+    .mini-satisfaction-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      min-width: 56px;
+      position: relative;
+    }
+    .mini-avatar-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 2px solid #ffe5b4;
+      box-shadow: 0 1px 2px #ccc2;
+      background: #fffbe9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 2px;
+      position: relative;
+      cursor: pointer;
+    }
+    .mini-avatar-circle img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+    }
+    .mini-satisfaction-score {
+      font-size: 1.1em;
+      color: #b33c00;
+      font-weight: bold;
+      margin-top: 2px;
+    }
+    /* Tooltip styles */
+    .mini-avatar-tooltip {
+      visibility: hidden;
+      opacity: 0;
+      background: #fffbe9;
+      color: #b33c00;
+      text-align: center;
+      border-radius: 6px;
+      padding: 4px 12px;
+      position: absolute;
+      z-index: 10;
+      bottom: 110%;
+      left: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0 2px 8px #ccc;
+      font-size: 0.95em;
+      font-weight: bold;
+      transition: opacity 0.2s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .mini-avatar-circle:hover .mini-avatar-tooltip {
+      visibility: visible;
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -786,6 +845,36 @@
         <div class="gameplay-top-row">
           <div class="day-counter" id="gameplay-day-counter">Day: <span id="current-day">1</span> of 5</div>
           <div class="cash-display" id="gameplay-cash-display">Cash: $100 USD</div>
+        </div>
+        
+        <!-- Customer Satisfaction Mini Section -->
+        <div id="mini-satisfaction-section" style="display:none; width: 100%; margin-top: 12px; margin-bottom: 5px;">
+          <div style="display: flex; gap: 24px; justify-content: flex-start; align-items: center; width: 100%;">
+            <div class="mini-satisfaction-item" data-segment="Student">
+              <div class="mini-avatar-circle" data-tooltip="Student Satisfaction">
+                <img src="avatar_assets/character-male-a.png" alt="Student">
+              </div>
+              <span class="mini-satisfaction-score" id="mini-sat-Student">--</span>
+            </div>
+            <div class="mini-satisfaction-item" data-segment="Tourist">
+              <div class="mini-avatar-circle" data-tooltip="Tourist Satisfaction">
+                <img src="avatar_assets/character-male-b.png" alt="Tourist">
+              </div>
+              <span class="mini-satisfaction-score" id="mini-sat-Tourist">--</span>
+            </div>
+            <div class="mini-satisfaction-item" data-segment="Healthy Eater">
+              <div class="mini-avatar-circle" data-tooltip="Healthy Eater Satisfaction">
+                <img src="avatar_assets/character-female-e.png" alt="Healthy Eater">
+              </div>
+              <span class="mini-satisfaction-score" id="mini-sat-Healthy_Eater">--</span>
+            </div>
+            <div class="mini-satisfaction-item" data-segment="Gourmet Eater">
+              <div class="mini-avatar-circle" data-tooltip="Gourmet Eater Satisfaction">
+                <img src="avatar_assets/character-female-f.png" alt="Gourmet Eater">
+              </div>
+              <span class="mini-satisfaction-score" id="mini-sat-Gourmet_Eater">--</span>
+            </div>
+          </div>
         </div>
         
         <!-- Daily Report Button -->
@@ -2159,6 +2248,54 @@
         c.classList.toggle('active', c.id === `${tab}-tab`);
       });
     }
+
+    // --- Mini Customer Satisfaction Section Logic ---
+    function updateMiniSatisfactionSection(dayResult) {
+      const section = document.getElementById('mini-satisfaction-section');
+      if (!dayResult) {
+        section.style.display = 'none';
+        return;
+      }
+      section.style.display = 'block';
+      CUSTOMER_SEGMENTS.forEach(seg => {
+        // Calculate weighted score as in daily report
+        const avgSatisfaction = dayResult.segmentCounts[seg.name] > 0 ? 
+          (dayResult.segmentSatisfaction[seg.name] / dayResult.segmentCounts[seg.name]) : 0;
+        const coverage = (dayResult.segmentTotalServed[seg.name] / seg.totalCustomers) * 100;
+        const weightedScore = avgSatisfaction * (coverage / 100);
+        // Fix id for spaces
+        const el = document.getElementById('mini-sat-' + seg.name.replace(/ /g, '_'));
+        if (el) {
+          el.textContent = (dayResult.segmentCounts[seg.name] > 0) ? weightedScore.toFixed(2) : '--';
+        }
+      });
+    }
+    // Tooltip logic for mini avatars
+    document.querySelectorAll('.mini-avatar-circle').forEach(function(circle) {
+      const label = circle.getAttribute('data-tooltip');
+      if (!circle.querySelector('.mini-avatar-tooltip')) {
+        const tooltip = document.createElement('div');
+        tooltip.className = 'mini-avatar-tooltip';
+        tooltip.textContent = label;
+        circle.appendChild(tooltip);
+      }
+    });
+    // Show/hide section after simulation
+    // Call this after each simulation and on reset
+    // After simulateDay:
+    const originalSimulateDay = simulateDay;
+    simulateDay = async function() {
+      await originalSimulateDay();
+      updateMiniSatisfactionSection(dayResults[currentDay - 1]);
+    };
+    // On resetSimulation, hide section
+    const originalResetSimulation = resetSimulation;
+    resetSimulation = function() {
+      originalResetSimulation();
+      updateMiniSatisfactionSection(null);
+    };
+    // On page load, hide section
+    updateMiniSatisfactionSection(null);
   </script>
 </body>
 </html> 
