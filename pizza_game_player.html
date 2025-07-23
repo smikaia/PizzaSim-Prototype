@@ -297,7 +297,8 @@
       display: flex;
       flex-direction: column;
       gap: 15px;
-      min-height: 380px;
+      min-height: 530px;
+      margin: 20px;
     }
     
     .gameplay-top-row {
@@ -325,8 +326,16 @@
       text-align: center;
     }
     
+    .gameplay-daily-report .button {
+      width: 100%;
+    }
+    
     .gameplay-edit-menu {
       text-align: center;
+    }
+    
+    .gameplay-edit-menu .button {
+      width: 100%;
     }
     
     .gameplay-bottom-row {
@@ -783,6 +792,18 @@
       visibility: visible;
       opacity: 1;
     }
+    
+    /* Day Simulation Loading Animation */
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -849,7 +870,7 @@
         
         <!-- Customer Satisfaction Mini Section -->
         <div id="mini-satisfaction-section" style="display:none; width: 100%; margin-top: 12px; margin-bottom: 5px;">
-          <div style="display: flex; gap: 24px; justify-content: flex-start; align-items: center; width: 100%;">
+          <div style="display: flex; gap: 20px; justify-content: flex-start; align-items: center; width: 100%;">
             <div class="mini-satisfaction-item" data-segment="Student">
               <div class="mini-avatar-circle" data-tooltip="Student Satisfaction">
                 <img src="avatar_assets/character-male-a.png" alt="Student">
@@ -878,17 +899,32 @@
         </div>
         
         <!-- Daily Report Button -->
-        <div class="gameplay-daily-report">
+        <div class="gameplay-daily-report" id="gameplay-daily-report">
           <button class="button" id="daily-report-button" onclick="showLastDailyReport()" disabled>Daily Report</button>
         </div>
         
         <!-- Edit Pizza Menu Button -->
-        <div class="gameplay-edit-menu">
+        <div class="gameplay-edit-menu" id="gameplay-edit-menu">
           <button class="button" id="edit-pizza-menu-button" onclick="openPizzaMenuModal()">Edit Pizza Menu</button>
         </div>
         
+        <!-- Day 1 Helper Text (only visible on Day 1) -->
+        <div id="day1-helper-text" style="display: none; padding: 30px; background: #fff3e0; border-radius: 8px; border: 2px solid #ffe5b4; text-align: center; margin: 30px 0;">
+          <div style="color: #b33c00; font-weight: bold; margin-bottom: 15px;">🍕 Welcome to your Pizzeria! 🍕</div>
+          <div style="color: #666; font-size: 0.95em; line-height: 1.4; margin-bottom: 0px;">
+            Click on "Edit Pizza Menu" to customize your pizza recipes! <br> <br> Once you're happy with your menu, click "Start Day" to receive customers!
+          </div>
+        </div>
+        
+        <!-- Day Simulation Loading Animation (hidden by default) -->
+        <div id="day-simulation-loading" style="display: none; text-align: center; margin: 20px 0; padding: 20px; background: #fff3e0; border-radius: 8px;">
+          <div class="clock-animation" style="font-size: 3em; margin-bottom: 15px; animation: pulse 1.5s infinite, spin 2s infinite linear;">⏰</div>
+          <div style="font-size: 1.2em; font-weight: bold; color: #b33c00; margin-bottom: 10px;">Serving customers...</div>
+          <div style="font-size: 0.9em; color: #666;">Pay attention to the customer feedback to improve your pizza menu!</div>
+        </div>
+        
         <!-- Marketing Controls -->
-        <div class="marketing-controls" style="margin: 15px 0; padding: 15px; background: #fff3e0; border-radius: 8px;">
+        <div class="marketing-controls" id="marketing-controls" style="margin: 15px 0; padding: 15px; background: #fff3e0; border-radius: 8px;">
           <h3 style="margin-top: 0; color: #b33c00;">Marketing Activity (Optional)</h3>
           <div style="margin-bottom: 10px;">
             <label style="display: block; margin-bottom: 5px;">Activity Type:</label>
@@ -1331,8 +1367,8 @@
     async function simulateDay() {
       if (currentDay > 5 || simulationComplete) return;
       
-      // Hide the Start Day button during simulation
-      document.getElementById('simulate-button').style.display = 'none';
+      // Hide UI elements during simulation and show loading animation
+      hideUIForSimulation();
       
       // Clear any previous avatars
       document.querySelectorAll('.seated-customer').forEach(cell => cell.innerHTML = '');
@@ -1353,6 +1389,8 @@
       // Validate marketing selection
       if (marketingType !== 'none' && !marketingTarget) {
         alert('Please select a target segment for your marketing activity!');
+        // Show UI elements back if validation fails
+        showUIAfterSimulation();
         return;
       }
       
@@ -1360,6 +1398,8 @@
         marketingCost = MARKETING_COSTS[marketingType];
         if (playerCash < marketingCost) {
           alert('Not enough cash for selected marketing activity!');
+          // Show UI elements back if validation fails
+          showUIAfterSimulation();
           return;
         }
         marketingEffect = MARKETING_EFFECTS[marketingType];
@@ -1579,8 +1619,8 @@
       document.getElementById('results').style.display = 'block';
       document.getElementById('day-navigation').style.display = 'block';
       
-      // Show the Start Day button again after simulation
-      document.getElementById('simulate-button').style.display = 'block';
+      // Show UI elements again after simulation and hide loading animation
+      showUIAfterSimulation();
 
       // Show daily report
       showDailyReport(dayResult);
@@ -1597,6 +1637,8 @@
         document.getElementById('marketing-target').disabled = true;
         document.getElementById('marketing-cost').textContent = '';
         updateMarketingControls();
+        // Update Day 1 specific UI when advancing to next day
+        updateDay1UI();
       }
     }
 
@@ -1612,7 +1654,7 @@
         visitedCustomers[segment.name].clear();
       });
       document.getElementById('current-day').textContent = currentDay;
-      document.getElementById('simulate-button').style.display = 'block';
+      showUIAfterSimulation();
       document.getElementById('daily-report-button').disabled = true; // Disable the button
       document.getElementById('results').style.display = 'none';
       document.getElementById('simulation-summary').style.display = 'none';
@@ -1623,6 +1665,8 @@
       playerCash = 100;
       updateCashDisplay();
       updateMarketingControls();
+      // Reset to Day 1 UI state
+      updateDay1UI();
     }
 
     function showPreviousDay() {
@@ -1756,6 +1800,8 @@
     // Initial setup
     updateCashDisplay();
     updateMarketingControls();
+    // Set initial Day 1 UI state
+    updateDay1UI();
 
     // --- Pizza Edit Modal Logic ---
     const PIZZA_ICONS = ['🍕','🍕','🍕']; // You can use different icons if you want
@@ -2043,6 +2089,42 @@
         updateModalPizzaMenuCards();
     };
 
+    // Day 1 specific UI management
+    function updateDay1UI() {
+      if (currentDay === 1) {
+        // Hide daily report button and marketing controls on Day 1
+        document.getElementById('gameplay-daily-report').style.display = 'none';
+        document.getElementById('marketing-controls').style.display = 'none';
+        // Show helper text on Day 1
+        document.getElementById('day1-helper-text').style.display = 'block';
+      } else {
+        // Show all elements for Day 2+
+        document.getElementById('gameplay-daily-report').style.display = 'block';
+        document.getElementById('marketing-controls').style.display = 'block';
+        // Hide helper text after Day 1
+        document.getElementById('day1-helper-text').style.display = 'none';
+      }
+    }
+
+    // Helper functions for UI state management during simulation
+    function hideUIForSimulation() {
+      document.getElementById('simulate-button').style.display = 'none';
+      document.getElementById('gameplay-daily-report').style.display = 'none';
+      document.getElementById('gameplay-edit-menu').style.display = 'none';
+      document.getElementById('marketing-controls').style.display = 'none';
+      document.getElementById('day-simulation-loading').style.display = 'block';
+      // Hide Day 1 helper text during simulation
+      document.getElementById('day1-helper-text').style.display = 'none';
+    }
+    
+    function showUIAfterSimulation() {
+      document.getElementById('simulate-button').style.display = 'block';
+      document.getElementById('gameplay-edit-menu').style.display = 'block';
+      document.getElementById('day-simulation-loading').style.display = 'none';
+      // Update Day 1 specific UI state after simulation
+      updateDay1UI();
+    }
+
     // Add Daily Report Modal Functions
     // Add variable to track last daily report
     let lastDailyReport = null;
@@ -2233,6 +2315,7 @@
         
         // Mark that this daily report was opened manually
         dailyReportOpenedAutomatically = false;
+        
         
         const modal = document.getElementById('daily-report-modal');
         modal.style.display = 'flex';
