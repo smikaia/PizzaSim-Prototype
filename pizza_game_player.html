@@ -804,6 +804,51 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+    
+    /* Help tooltip styles */
+    .help-tooltip {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+    .help-tooltip-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      margin-left: 8px;
+      border-radius: 50%;
+      background: #b33c00;
+      color: #fff;
+      font-weight: bold;
+      font-size: 0.9em;
+      cursor: default;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      user-select: none;
+    }
+    .help-tooltip-content {
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      position: absolute;
+      top: 120%;
+      right: 0;
+      transform: translateX(50%);
+      background: #fffbe9;
+      color: #7a3a00;
+      border: 2px solid #ffe5b4;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px #ccc;
+      padding: 10px 12px;
+      width: 260px;
+      z-index: 20;
+      font-weight: normal;
+    }
+    .help-tooltip:hover .help-tooltip-content {
+      visibility: visible;
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -925,7 +970,15 @@
         
         <!-- Marketing Controls -->
         <div class="marketing-controls" id="marketing-controls" style="margin: 15px 0; padding: 15px; background: #fff3e0; border-radius: 8px;">
-          <h3 style="margin-top: 0; color: #b33c00;">Marketing Activity (Optional)</h3>
+          <h3 style="margin-top: 0; color: #b33c00; display: flex; align-items: center; gap: 6px;">
+            <span>Marketing Activity (Optional)</span>
+            <span class="help-tooltip">
+              <span class="help-tooltip-button" aria-label="What is Marketing Activity?" title="What is Marketing Activity?">?</span>
+              <div class="help-tooltip-content">
+                You can launch marketing activity for the specific segment to attract more customers from that segment. Higher spend will get you more customers!
+              </div>
+            </span>
+          </h3>
           <div style="margin-bottom: 10px;">
             <label style="display: block; margin-bottom: 5px;">Activity Type:</label>
             <select id="marketing-type" style="padding: 5px; margin-right: 10px;">
