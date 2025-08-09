@@ -988,9 +988,9 @@
             <label style="display: block; margin-bottom: 5px;">Activity Type:</label>
             <select id="marketing-type" style="padding: 5px; margin-right: 10px;">
               <option value="none">No Marketing</option>
-              <option value="flyer">Flyer Drop ($5)</option>
-              <option value="social">Social Media Ads ($15)</option>
-              <option value="mascot">Street Mascot ($30)</option>
+              <option value="flyer">Flyer Drop ($10)</option>
+              <option value="social">Social Media Ads ($25)</option>
+              <option value="mascot">Street Mascot ($50)</option>
             </select>
             
             <select id="marketing-target" style="padding: 5px;" disabled>
@@ -1330,9 +1330,9 @@
     };
 
     const MARKETING_COSTS = {
-      flyer: 5,
-      social: 15,
-      mascot: 30
+      flyer: 10,
+      social: 25,
+      mascot: 50
     };
 
     // Add cash management
@@ -2207,9 +2207,10 @@
         // Show helper text on Day 1
         document.getElementById('day1-helper-text').style.display = 'block';
       } else {
-        // Show all elements for Day 2+
+        // Show daily report for Day 2+
         document.getElementById('gameplay-daily-report').style.display = 'block';
-        document.getElementById('marketing-controls').style.display = 'block';
+        // Show marketing controls starting from Day 6
+        document.getElementById('marketing-controls').style.display = currentDay >= 6 ? 'block' : 'none';
         // Hide helper text after Day 1
         document.getElementById('day1-helper-text').style.display = 'none';
         // Show goal text starting from Day 2
