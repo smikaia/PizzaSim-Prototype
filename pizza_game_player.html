@@ -1336,12 +1336,12 @@
     };
 
     // Add cash management
-    let playerCash = 100; // Starting cash
+    let playerCash = 0; // Starting cash
 
     function updateCashDisplay() {
       const cashDisplay = document.getElementById('gameplay-cash-display');
       cashDisplay.textContent = `Cash: $${playerCash} USD`;
-      cashDisplay.classList.toggle('low', playerCash < 30); // Red if less than cheapest marketing
+      cashDisplay.classList.toggle('low', playerCash < 0); // Red if negative cash
     }
 
     function updateMarketingControls() {
@@ -1692,8 +1692,8 @@
         // Calculate segment coverage (percentage of total segment served)
         let coverage = (dayResult.segmentTotalServed[seg.name] / seg.totalCustomers) * 100;
         
-        // Calculate weighted satisfaction (satisfaction * coverage)
-        let weightedSatisfaction = avgSatisfaction * (coverage / 100);
+        // Calculate weighted satisfaction (satisfaction * coverage * 1.3 multiplier for game balance)
+        let weightedSatisfaction = avgSatisfaction * (coverage / 100) * 1.3;
         let hasCustomersToday = dayResult.segmentCounts[seg.name] > 0;
         
         // Get display-friendly weighted satisfaction (shows last available score if no customers today)
@@ -1770,7 +1770,7 @@
       document.getElementById('marketing-target').value = '';
       document.getElementById('marketing-target').disabled = true;
       document.getElementById('marketing-cost').textContent = '';
-      playerCash = 100;
+      playerCash = 0;
       updateCashDisplay();
       updateMarketingControls();
       // Reset to Day 1 UI state
@@ -1872,7 +1872,7 @@
                 Satisfaction: ${segmentTrends[seg.name].map(s => s.toFixed(2)).join(' → ')}<br>
                 Coverage: ${segmentCoverage[seg.name].map(c => c.toFixed(1) + '%').join(' → ')}<br>
                 Final Weighted Score: ${(segmentTrends[seg.name][segmentTrends[seg.name].length-1] * 
-                (segmentCoverage[seg.name][segmentCoverage[seg.name].length-1]/100)).toFixed(2)} / 10
+                (segmentCoverage[seg.name][segmentCoverage[seg.name].length-1]/100) * 1.3).toFixed(2)} / 10
             </li>
           `).join('')}
         </ul>
@@ -2389,7 +2389,7 @@
         const avgSatisfaction = dayResult.segmentCounts[seg.name] > 0 ? 
           (dayResult.segmentSatisfaction[seg.name] / dayResult.segmentCounts[seg.name]) : 0;
         const coverage = (dayResult.segmentTotalServed[seg.name] / seg.totalCustomers) * 100;
-        const weightedScore = avgSatisfaction * (coverage / 100);
+        const weightedScore = avgSatisfaction * (coverage / 100) * 1.3;
         const hasCustomersToday = dayResult.segmentCounts[seg.name] > 0;
         
         // Get display-friendly weighted satisfaction (shows last available score if no customers today)
@@ -2571,7 +2571,7 @@
           const avgSatisfaction = dayResult.segmentCounts[seg.name] > 0 ? 
             (dayResult.segmentSatisfaction[seg.name] / dayResult.segmentCounts[seg.name]) : 0;
           const coverage = (dayResult.segmentTotalServed[seg.name] / seg.totalCustomers) * 100;
-          const weightedScore = avgSatisfaction * (coverage / 100);
+          const weightedScore = avgSatisfaction * (coverage / 100) * 1.3;
           const hasCustomersToday = dayResult.segmentCounts[seg.name] > 0;
           
           // Get display-friendly weighted satisfaction (shows last available score if no customers today)
@@ -2661,7 +2661,7 @@
           const avgSatisfaction = day10Result.segmentCounts[seg.name] > 0 ? 
             (day10Result.segmentSatisfaction[seg.name] / day10Result.segmentCounts[seg.name]) : 0;
           const coverage = (day10Result.segmentTotalServed[seg.name] / seg.totalCustomers) * 100;
-          const weightedScore = avgSatisfaction * (coverage / 100);
+          const weightedScore = avgSatisfaction * (coverage / 100) * 1.3;
           finalSegmentScores[seg.name] = weightedScore;
         });
       }
@@ -2724,7 +2724,7 @@
         const avgSatisfaction = dayResult.segmentCounts[seg.name] > 0 ? 
           (dayResult.segmentSatisfaction[seg.name] / dayResult.segmentCounts[seg.name]) : 0;
         const coverage = (dayResult.segmentTotalServed[seg.name] / seg.totalCustomers) * 100;
-        const weightedScore = avgSatisfaction * (coverage / 100);
+        const weightedScore = avgSatisfaction * (coverage / 100) * 1.3;
         const hasCustomersToday = dayResult.segmentCounts[seg.name] > 0;
         
         // Get display-friendly weighted satisfaction (shows last available score if no customers today)

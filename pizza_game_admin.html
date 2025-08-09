@@ -260,12 +260,12 @@
     };
 
     // Add cash management
-    let playerCash = 100; // Starting cash
+    let playerCash = 0; // Starting cash
 
     function updateCashDisplay() {
       const cashDisplay = document.getElementById('cash-display');
       cashDisplay.textContent = `Cash: $${playerCash} USD`;
-      cashDisplay.classList.toggle('low', playerCash < 30); // Red if less than cheapest marketing
+      cashDisplay.classList.toggle('low', playerCash < 0); // Red if negative cash
     }
 
     function updateMarketingControls() {
@@ -590,7 +590,7 @@
       document.getElementById('marketing-target').value = '';
       document.getElementById('marketing-target').disabled = true;
       document.getElementById('marketing-cost').textContent = '';
-      playerCash = 100;
+      playerCash = 0;
       updateCashDisplay();
       updateMarketingControls();
     }
