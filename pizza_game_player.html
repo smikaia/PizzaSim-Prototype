@@ -943,6 +943,11 @@
           </div>
         </div>
         
+        <!-- Goal Text -->
+        <div id="goal-text" style="display:none; text-align: center; margin: 10px 0; padding: 8px; background: #fff3e0; border-radius: 6px; border: 1px solid #ffe5b4; font-size: 0.9em; color: #7a3a00;">
+          <strong>Goal:</strong> Reach satisfaction score 5 or more for at least one customer segment by the end of Day 5.
+        </div>
+        
         <!-- Daily Report Button -->
         <div class="gameplay-daily-report" id="gameplay-daily-report">
           <button class="button" id="daily-report-button" onclick="showLastDailyReport()" disabled>Daily Report</button>
@@ -1126,6 +1131,16 @@
         <input type="number" id="pizza-edit-price" min="1" style="width:70px; padding:4px 8px; border-radius:6px; border:1px solid #ccc; font-size:1em;">
       </div>
       <button id="pizza-edit-done" class="button" style="width:100%; font-size:1.1em;">Done</button>
+    </div>
+  </div>
+
+  <!-- Win/Game Over Modal -->
+  <div id="win-game-over-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:1001; align-items:center; justify-content:center;">
+    <div style="background:#fffbe9; border-radius:18px; box-shadow:0 4px 24px #bfae8e; padding:40px; width:90%; max-width:600px; text-align:center; position:relative;">
+      <div id="win-game-over-content">
+        <!-- Content will be set dynamically -->
+      </div>
+      <button class="button" onclick="closeWinGameOverModal()" style="margin-top: 30px; padding: 12px 30px; font-size: 1.1em;">Continue</button>
     </div>
   </div>
 
@@ -2148,6 +2163,7 @@
         // Hide daily report button and marketing controls on Day 1
         document.getElementById('gameplay-daily-report').style.display = 'none';
         document.getElementById('marketing-controls').style.display = 'none';
+        document.getElementById('goal-text').style.display = 'none';
         // Show helper text on Day 1
         document.getElementById('day1-helper-text').style.display = 'block';
       } else {
@@ -2156,6 +2172,7 @@
         document.getElementById('marketing-controls').style.display = 'block';
         // Hide helper text after Day 1
         document.getElementById('day1-helper-text').style.display = 'none';
+        // Goal text visibility will be handled by updateMiniSatisfactionSection
       }
     }
 
@@ -2548,10 +2565,13 @@
         if (currentDay < 5 && !simulationComplete) {
           nextDay();
         } else if (currentDay === 5) {
-          // If it's the last day, mark simulation as complete and show summary
+          // If it's the last day, mark simulation as complete and check win condition
           simulationComplete = true;
           document.getElementById('simulate-button').style.display = 'none';
-          updateSimulationSummary();
+          
+          // Check win condition and show appropriate modal
+          const isWin = checkWinCondition();
+          showWinGameOverModal(isWin);
         }
       }
       
@@ -2571,14 +2591,85 @@
       });
     }
 
+    // --- Win Condition Logic ---
+    function checkWinCondition() {
+      // Check if the player has reached satisfaction score 5+ for any segment by Day 5
+      if (currentDay !== 5 || dayResults.length === 0) {
+        return false;
+      }
+      
+      // Calculate final satisfaction scores for all segments across all days
+      const finalSegmentScores = {};
+      CUSTOMER_SEGMENTS.forEach(seg => {
+        finalSegmentScores[seg.name] = 0;
+      });
+      
+      // Use the Day 5 results to get the final scores
+      const day5Result = dayResults[4]; // Day 5 is index 4
+      if (day5Result) {
+        CUSTOMER_SEGMENTS.forEach(seg => {
+          const avgSatisfaction = day5Result.segmentCounts[seg.name] > 0 ? 
+            (day5Result.segmentSatisfaction[seg.name] / day5Result.segmentCounts[seg.name]) : 0;
+          const coverage = (day5Result.segmentTotalServed[seg.name] / seg.totalCustomers) * 100;
+          const weightedScore = avgSatisfaction * (coverage / 100);
+          finalSegmentScores[seg.name] = weightedScore;
+        });
+      }
+      
+      // Check if any segment has score >= 5
+      return Object.values(finalSegmentScores).some(score => score >= 5.0);
+    }
+
+    function showWinGameOverModal(isWin) {
+      const modal = document.getElementById('win-game-over-modal');
+      const content = document.getElementById('win-game-over-content');
+      
+      if (isWin) {
+        content.innerHTML = `
+          <div style="font-size: 3em; margin-bottom: 20px;">🎉</div>
+          <h1 style="color: #2ecc71; margin-bottom: 20px; font-size: 2.5em;">You Won!</h1>
+          <p style="font-size: 1.2em; color: #27ae60; margin-bottom: 15px;">
+            Congratulations! You successfully reached a satisfaction score of 5 or more for at least one customer segment by the end of Day 5.
+          </p>
+          <p style="font-size: 1em; color: #666;">
+            Your pizza business is thriving! You've learned how to satisfy your customers and build a successful restaurant.
+          </p>
+        `;
+      } else {
+        content.innerHTML = `
+          <div style="font-size: 3em; margin-bottom: 20px;">😔</div>
+          <h1 style="color: #e74c3c; margin-bottom: 20px; font-size: 2.5em;">Game Over</h1>
+          <p style="font-size: 1.2em; color: #c0392b; margin-bottom: 15px;">
+            Unfortunately, you didn't reach a satisfaction score of 5 or more for any customer segment by the end of Day 5.
+          </p>
+          <p style="font-size: 1em; color: #666;">
+            Don't give up! Try again and experiment with different pizza recipes and marketing strategies to better satisfy your customers.
+          </p>
+        `;
+      }
+      
+      modal.style.display = 'flex';
+    }
+
+    function closeWinGameOverModal() {
+      document.getElementById('win-game-over-modal').style.display = 'none';
+      // After closing the win/game over modal, show the simulation summary
+      updateSimulationSummary();
+    }
+
     // --- Mini Customer Satisfaction Section Logic ---
     function updateMiniSatisfactionSection(dayResult) {
       const section = document.getElementById('mini-satisfaction-section');
+      const goalText = document.getElementById('goal-text');
       if (!dayResult) {
         section.style.display = 'none';
+        goalText.style.display = 'none';
         return;
       }
       section.style.display = 'block';
+      // Show goal text if both mini-satisfaction-section and daily report are visible
+      const dailyReportVisible = document.getElementById('gameplay-daily-report').style.display !== 'none';
+      goalText.style.display = dailyReportVisible ? 'block' : 'none';
       CUSTOMER_SEGMENTS.forEach(seg => {
         // Calculate weighted score as in daily report
         const avgSatisfaction = dayResult.segmentCounts[seg.name] > 0 ? 
