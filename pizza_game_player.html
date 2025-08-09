@@ -978,7 +978,7 @@
           <h3 style="margin-top: 0; color: #b33c00; display: flex; align-items: center; gap: 6px;">
             <span>Marketing Activity (Optional)</span>
             <span class="help-tooltip">
-              <span class="help-tooltip-button" aria-label="What is Marketing Activity?" title="What is Marketing Activity?">?</span>
+              <span class="help-tooltip-button">?</span>
               <div class="help-tooltip-content">
                 You can launch marketing activity for the specific segment to attract more customers from that segment. Higher spend will get you more customers!
               </div>
@@ -1164,6 +1164,9 @@
       </div>
       
       <div id="satisfaction-tab" class="daily-report-tab-content">
+        <div style="text-align: center; margin-bottom: 20px; padding: 12px; background: #fff3e0; border-radius: 8px; border: 1px solid #ffe5b4; color: #7a3a00;">
+          <strong>Goal:</strong> Reach satisfaction score 5 or more for at least one customer segment by the end of Day 5.
+        </div>
         <div id="satisfaction-grid" class="satisfaction-grid">
           <!-- Segment satisfaction cards will be inserted here -->
         </div>
@@ -2191,7 +2194,8 @@
         document.getElementById('marketing-controls').style.display = 'block';
         // Hide helper text after Day 1
         document.getElementById('day1-helper-text').style.display = 'none';
-        // Goal text visibility will be handled by updateMiniSatisfactionSection
+        // Show goal text starting from Day 2
+        document.getElementById('goal-text').style.display = currentDay >= 2 ? 'block' : 'none';
       }
     }
 
@@ -2694,9 +2698,8 @@
         return;
       }
       section.style.display = 'block';
-      // Show goal text if both mini-satisfaction-section and daily report are visible
-      const dailyReportVisible = document.getElementById('gameplay-daily-report').style.display !== 'none';
-      goalText.style.display = dailyReportVisible ? 'block' : 'none';
+      // Show goal text starting from Day 2 when satisfaction tracking begins
+      goalText.style.display = currentDay >= 2 ? 'block' : 'none';
       CUSTOMER_SEGMENTS.forEach(seg => {
         // Calculate weighted score as in daily report
         const avgSatisfaction = dayResult.segmentCounts[seg.name] > 0 ? 
