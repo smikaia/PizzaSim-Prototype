@@ -1281,11 +1281,25 @@
       return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
+    // Helper function to get display-friendly weighted satisfaction score
+    function getDisplayWeightedSatisfaction(segmentName, currentWeightedScore, hasCustomersToday) {
+      if (hasCustomersToday) {
+        // Update and return the current score
+        lastWeightedSatisfactionScores[segmentName] = currentWeightedScore;
+        return currentWeightedScore;
+      } else {
+        // Return last available score if exists, otherwise 0
+        return lastWeightedSatisfactionScores[segmentName] !== undefined ? 
+               lastWeightedSatisfactionScores[segmentName] : 0;
+      }
+    }
+
     // Simulation state
     let currentDay = 1;
     let simulationComplete = false;
     let dayResults = [];
     let currentDayView = 1;
+    let lastWeightedSatisfactionScores = {}; // Track last available weighted satisfaction scores for display
 
     // Marketing activity effects
     const MARKETING_EFFECTS = {
@@ -1659,8 +1673,12 @@
         
         // Calculate weighted satisfaction (satisfaction * coverage)
         let weightedSatisfaction = avgSatisfaction * (coverage / 100);
+        let hasCustomersToday = dayResult.segmentCounts[seg.name] > 0;
         
-        resultsHTML += `<li><b>${seg.name}:</b> ${avgSatisfaction.toFixed(2)} / 10 (${coverage.toFixed(1)}% of segment served, weighted: ${weightedSatisfaction.toFixed(2)})</li>`;
+        // Get display-friendly weighted satisfaction (shows last available score if no customers today)
+        let displayWeightedSatisfaction = getDisplayWeightedSatisfaction(seg.name, weightedSatisfaction, hasCustomersToday);
+        
+        resultsHTML += `<li><b>${seg.name}:</b> ${avgSatisfaction.toFixed(2)} / 10 (${coverage.toFixed(1)}% of segment served, weighted: ${displayWeightedSatisfaction.toFixed(2)})</li>`;
       });
       resultsHTML += `</ul>`;
 
@@ -1717,6 +1735,7 @@
       dayResults = [];
       lastDailyReport = null; // Clear the last report
       dailyReportOpenedAutomatically = false; // Reset the flag
+      lastWeightedSatisfactionScores = {}; // Reset satisfaction score tracking
       // Reset visited customers tracking
       CUSTOMER_SEGMENTS.forEach(segment => {
         visitedCustomers[segment.name].clear();
@@ -2348,6 +2367,10 @@
           (dayResult.segmentSatisfaction[seg.name] / dayResult.segmentCounts[seg.name]) : 0;
         const coverage = (dayResult.segmentTotalServed[seg.name] / seg.totalCustomers) * 100;
         const weightedScore = avgSatisfaction * (coverage / 100);
+        const hasCustomersToday = dayResult.segmentCounts[seg.name] > 0;
+        
+        // Get display-friendly weighted satisfaction (shows last available score if no customers today)
+        const displayWeightedScore = getDisplayWeightedSatisfaction(seg.name, weightedScore, hasCustomersToday);
         
         // Find most popular pizza for this segment
         const pizzaCounts = segmentData[seg.name].pizzaCounts;
@@ -2361,7 +2384,7 @@
             <img src="${SEGMENT_AVATARS[seg.name]}" alt="${seg.name}">
           </div>
           <div class="segment-name">${seg.name}</div>
-          <div class="satisfaction-score">${weightedScore.toFixed(2)}</div>
+          <div class="satisfaction-score">${displayWeightedScore.toFixed(2)}</div>
           <div class="satisfaction-label">Satisfaction Score</div>
           <div style="margin-top: 15px; padding: 10px; background: #fff3e0; border-radius: 8px; width: 100%;">
             <div style="margin-bottom: 8px;">
@@ -2526,6 +2549,10 @@
             (dayResult.segmentSatisfaction[seg.name] / dayResult.segmentCounts[seg.name]) : 0;
           const coverage = (dayResult.segmentTotalServed[seg.name] / seg.totalCustomers) * 100;
           const weightedScore = avgSatisfaction * (coverage / 100);
+          const hasCustomersToday = dayResult.segmentCounts[seg.name] > 0;
+          
+          // Get display-friendly weighted satisfaction (shows last available score if no customers today)
+          const displayWeightedScore = getDisplayWeightedSatisfaction(seg.name, weightedScore, hasCustomersToday);
           
           // Find most popular pizza for this segment
           const pizzaCounts = segmentData[seg.name].pizzaCounts;
@@ -2539,7 +2566,7 @@
               <img src="${SEGMENT_AVATARS[seg.name]}" alt="${seg.name}">
             </div>
             <div class="segment-name">${seg.name}</div>
-            <div class="satisfaction-score">${weightedScore.toFixed(2)}</div>
+            <div class="satisfaction-score">${displayWeightedScore.toFixed(2)}</div>
             <div class="satisfaction-label">Satisfaction Score</div>
             <div style="margin-top: 15px; padding: 10px; background: #fff3e0; border-radius: 8px; width: 100%;">
               <div style="margin-bottom: 8px;">
@@ -2676,10 +2703,15 @@
           (dayResult.segmentSatisfaction[seg.name] / dayResult.segmentCounts[seg.name]) : 0;
         const coverage = (dayResult.segmentTotalServed[seg.name] / seg.totalCustomers) * 100;
         const weightedScore = avgSatisfaction * (coverage / 100);
+        const hasCustomersToday = dayResult.segmentCounts[seg.name] > 0;
+        
+        // Get display-friendly weighted satisfaction (shows last available score if no customers today)
+        const displayWeightedScore = getDisplayWeightedSatisfaction(seg.name, weightedScore, hasCustomersToday);
+        
         // Fix id for spaces
         const el = document.getElementById('mini-sat-' + seg.name.replace(/ /g, '_'));
         if (el) {
-          el.textContent = (dayResult.segmentCounts[seg.name] > 0) ? weightedScore.toFixed(2) : '--';
+          el.textContent = displayWeightedScore.toFixed(2);
         }
       });
     }
