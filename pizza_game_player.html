@@ -1015,10 +1015,10 @@
         <th>Ingredient</th>
         <th>Unit Cost (USD)</th>
       </tr>
-      <tr><td>Cheese</td><td><input type="number" id="cost-cheese" value="1" min="1"></td></tr>
+      <tr><td>Cheese</td><td><input type="number" id="cost-cheese" value="2" min="1"></td></tr>
       <tr><td>Tomatoes</td><td><input type="number" id="cost-tomatoes" value="1" min="1"></td></tr>
       <tr><td>Veggies</td><td><input type="number" id="cost-veggies" value="1" min="1"></td></tr>
-      <tr><td>Pepperoni</td><td><input type="number" id="cost-pepperoni" value="1" min="1"></td></tr>
+      <tr><td>Pepperoni</td><td><input type="number" id="cost-pepperoni" value="3" min="1"></td></tr>
     </table>
 
     <!-- Original table (hidden but kept for data management) -->
@@ -1035,31 +1035,31 @@
       </tr>
       <tr>
         <td><span class="pizza-edit-link" data-pizza="1" style="cursor:pointer; color:#b33c00; text-decoration:underline;">Pizza 1</span></td>
-        <td><input type="number" id="p1-cheese" value="3" min="0" onchange="updatePizzaCosts()"></td>
+        <td><input type="number" id="p1-cheese" value="2" min="0" onchange="updatePizzaCosts()"></td>
         <td><input type="number" id="p1-tomatoes" value="2" min="0" onchange="updatePizzaCosts()"></td>
         <td><input type="number" id="p1-veggies" value="1" min="0" onchange="updatePizzaCosts()"></td>
         <td><input type="number" id="p1-pepperoni" value="4" min="0" onchange="updatePizzaCosts()"></td>
-        <td><input type="number" id="p1-price" value="15" min="1" onchange="updatePizzaCosts()"></td>
+        <td><input type="number" id="p1-price" value="20" min="1" onchange="updatePizzaCosts()"></td>
         <td id="p1-cost">0</td>
         <td id="p1-profit">0</td>
       </tr>
       <tr>
         <td><span class="pizza-edit-link" data-pizza="2" style="cursor:pointer; color:#b33c00; text-decoration:underline;">Pizza 2</span></td>
-        <td><input type="number" id="p2-cheese" value="0" min="0" onchange="updatePizzaCosts()"></td>
-        <td><input type="number" id="p2-tomatoes" value="1" min="0" onchange="updatePizzaCosts()"></td>
+        <td><input type="number" id="p2-cheese" value="1" min="0" onchange="updatePizzaCosts()"></td>
+        <td><input type="number" id="p2-tomatoes" value="3" min="0" onchange="updatePizzaCosts()"></td>
         <td><input type="number" id="p2-veggies" value="4" min="0" onchange="updatePizzaCosts()"></td>
-        <td><input type="number" id="p2-pepperoni" value="2" min="0" onchange="updatePizzaCosts()"></td>
-        <td><input type="number" id="p2-price" value="13" min="1" onchange="updatePizzaCosts()"></td>
+        <td><input type="number" id="p2-pepperoni" value="0" min="0" onchange="updatePizzaCosts()"></td>
+        <td><input type="number" id="p2-price" value="15" min="1" onchange="updatePizzaCosts()"></td>
         <td id="p2-cost">0</td>
         <td id="p2-profit">0</td>
       </tr>
       <tr>
         <td><span class="pizza-edit-link" data-pizza="3" style="cursor:pointer; color:#b33c00; text-decoration:underline;">Pizza 3</span></td>
-        <td><input type="number" id="p3-cheese" value="2" min="0" onchange="updatePizzaCosts()"></td>
-        <td><input type="number" id="p3-tomatoes" value="3" min="0" onchange="updatePizzaCosts()"></td>
+        <td><input type="number" id="p3-cheese" value="3" min="0" onchange="updatePizzaCosts()"></td>
+        <td><input type="number" id="p3-tomatoes" value="2" min="0" onchange="updatePizzaCosts()"></td>
         <td><input type="number" id="p3-veggies" value="2" min="0" onchange="updatePizzaCosts()"></td>
         <td><input type="number" id="p3-pepperoni" value="1" min="0" onchange="updatePizzaCosts()"></td>
-        <td><input type="number" id="p3-price" value="12" min="1" onchange="updatePizzaCosts()"></td>
+        <td><input type="number" id="p3-price" value="22" min="1" onchange="updatePizzaCosts()"></td>
         <td id="p3-cost">0</td>
         <td id="p3-profit">0</td>
       </tr>
@@ -1164,26 +1164,26 @@
     const CUSTOMER_SEGMENTS = [
       {
         name: "Student",
-        taste: { cheese: 2, tomatoes: 2, veggies: 1, pepperoni: 4 },
-        priceMin: 12, priceMax: 15,
+        taste: { cheese: 1, tomatoes: 2, veggies: 1, pepperoni: 3 },
+        priceMin: 12, priceMax: 16,
         totalCustomers: 40
       },
       {
         name: "Tourist",
-        taste: { cheese: 3, tomatoes: 3, veggies: 2, pepperoni: 2 },
-        priceMin: 14, priceMax: 18,
+        taste: { cheese: 2, tomatoes: 3, veggies: 2, pepperoni: 1 },
+        priceMin: 14, priceMax: 17,
         totalCustomers: 30
       },
       {
         name: "Healthy Eater",
-        taste: { cheese: 1, tomatoes: 3, veggies: 4, pepperoni: 0 },
+        taste: { cheese: 0, tomatoes: 4, veggies: 4, pepperoni: 0 },
         priceMin: 13, priceMax: 16,
         totalCustomers: 15
       },
       {
         name: "Gourmet Eater",
-        taste: { cheese: 4, tomatoes: 2, veggies: 2, pepperoni: 3 },
-        priceMin: 16, priceMax: 20,
+        taste: { cheese: 3, tomatoes: 2, veggies: 2, pepperoni: 2 },
+        priceMin: 16, priceMax: 22,
         totalCustomers: 15
       }
     ];
