@@ -1073,6 +1073,7 @@
 
   <div class="simulation-controls" style="margin: 20px 0;">
     <button class="button" id="reset-button" onclick="resetSimulation()">Reset Simulation</button>
+    <button class="button" id="game-guide-button" onclick="showGameGuide()" style="margin-left: 10px;">Game Guide</button>
   </div>
 
   <div class="results" id="results" style="display:none;">
@@ -1131,6 +1132,47 @@
         <input type="number" id="pizza-edit-price" min="1" style="width:70px; padding:4px 8px; border-radius:6px; border:1px solid #ccc; font-size:1em;">
       </div>
       <button id="pizza-edit-done" class="button" style="width:100%; font-size:1.1em;">Done</button>
+    </div>
+  </div>
+
+  <!-- Welcome/Game Guide Modal -->
+  <div id="welcome-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:1002; align-items:center; justify-content:center;">
+    <div style="background:#fffbe9; border-radius:18px; box-shadow:0 4px 24px #bfae8e; padding:40px; width:90%; max-width:700px; max-height:85vh; overflow-y:auto; text-align:center; position:relative;">
+      <button onclick="closeWelcomeModal()" style="position:absolute; top:18px; right:18px; background:none; border:none; font-size:1.5em; cursor:pointer; color:#b33c00;">&times;</button>
+      
+      <div style="margin-bottom: 30px;">
+        <h1 style="color:#b33c00; margin-bottom:10px; font-size:2.2em;">🍕 Welcome to Your Pizzeria! 🍕</h1>
+        <p style="color:#7a3a00; font-size:1.1em; margin-bottom:20px;">You have <strong>10 days</strong> to master the art of pizza making and satisfy your customers!</p>
+      </div>
+      
+      <div id="welcome-guide-content" style="text-align:left; background:#fff3e0; padding:25px; border-radius:12px; margin-bottom:30px; border:2px solid #ffe5b4;">
+        <h3 style="color:#b33c00; margin-top:0; margin-bottom:15px; text-align:center;">📋 Quick Guide</h3>
+        
+        <div style="margin-bottom:20px;">
+          <div style="color:#b33c00; font-weight:bold; margin-bottom:8px;">🍕 Customize Your Menu</div>
+          <p style="margin:0; color:#7a3a00;">Start each day by editing your pizza recipes and prices. Find the perfect balance of ingredients that your customers love!</p>
+        </div>
+        
+        <div style="margin-bottom:20px;">
+          <div style="color:#b33c00; font-weight:bold; margin-bottom:8px;">👥 Observe Your Customers</div>
+          <p style="margin:0; color:#7a3a00;">Watch different customer types try your pizzas and listen to their feedback. Each segment has unique preferences!</p>
+        </div>
+        
+        <div style="margin-bottom:20px;">
+          <div style="color:#b33c00; font-weight:bold; margin-bottom:8px;">📈 Track Satisfaction</div>
+          <p style="margin:0; color:#7a3a00;">Build satisfaction by perfecting recipes, pricing appropriately, and attracting more customers to your pizzeria.</p>
+        </div>
+        
+        <div style="background:#e8f5e8; padding:15px; border-radius:8px; border-left:4px solid #4caf50;">
+          <div style="color:#2e7d32; font-weight:bold; margin-bottom:5px;">🎯 Your Goal</div>
+          <p style="margin:0; color:#2e7d32;">Reach a <strong>Satisfaction Score of 5 or higher</strong> for at least one customer segment by Day 10!</p>
+        </div>
+      </div>
+      
+      <div id="welcome-buttons">
+        <button id="start-game-button" class="button" onclick="startGame()" style="padding: 15px 40px; font-size: 1.2em; margin-right: 15px; background: #4caf50; border-radius: 8px;">Start Game!</button>
+        <button class="button" onclick="closeWelcomeModal()" style="padding: 15px 30px; font-size: 1.1em; background: #757575; border-radius: 8px;">Close</button>
+      </div>
     </div>
   </div>
 
@@ -2707,6 +2749,37 @@
       updateSimulationSummary();
     }
 
+    // --- Welcome Modal Functions ---
+    let isFirstTimeUser = true; // Track if this is first time opening
+
+    function showWelcomeModal() {
+      const modal = document.getElementById('welcome-modal');
+      const startGameButton = document.getElementById('start-game-button');
+      
+      // Show/hide "Start Game" button based on whether it's first time
+      if (isFirstTimeUser) {
+        startGameButton.style.display = 'inline-block';
+      } else {
+        startGameButton.style.display = 'none';
+      }
+      
+      modal.style.display = 'flex';
+    }
+
+    function closeWelcomeModal() {
+      document.getElementById('welcome-modal').style.display = 'none';
+    }
+
+    function startGame() {
+      isFirstTimeUser = false;
+      closeWelcomeModal();
+    }
+
+    function showGameGuide() {
+      isFirstTimeUser = false; // Set to false when accessed via Game Guide button
+      showWelcomeModal();
+    }
+
     // --- Mini Customer Satisfaction Section Logic ---
     function updateMiniSatisfactionSection(dayResult) {
       const section = document.getElementById('mini-satisfaction-section');
@@ -2763,6 +2836,11 @@
     };
     // On page load, hide section
     updateMiniSatisfactionSection(null);
+    
+    // Show welcome modal on first page load
+    setTimeout(function() {
+      showWelcomeModal();
+    }, 500); // Small delay to ensure everything is loaded
   </script>
 </body>
 </html> 
