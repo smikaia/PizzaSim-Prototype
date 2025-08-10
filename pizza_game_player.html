@@ -1765,8 +1765,9 @@
       // Store the day's results
       dayResults[currentDay - 1] = dayResult;
       document.getElementById('current-day-results').innerHTML = resultsHTML;
-      document.getElementById('results').style.display = 'block';
-      document.getElementById('day-navigation').style.display = 'block';
+      // Remove results block display during daily operations - only show when game is over
+      // document.getElementById('results').style.display = 'block';
+      // document.getElementById('day-navigation').style.display = 'block';
       
       // Show UI elements again after simulation and hide loading animation
       showUIAfterSimulation();
@@ -1858,7 +1859,8 @@
         resultsHTML += `</ul>`;
         
         document.getElementById('current-day-results').innerHTML = resultsHTML;
-        document.getElementById('results').style.display = 'block';
+        // Remove results block display during day navigation - only show when game is over
+        // document.getElementById('results').style.display = 'block';
       }
     }
 
@@ -1922,6 +1924,16 @@
       
       document.getElementById('summary-content').innerHTML = summaryHTML;
       document.getElementById('simulation-summary').style.display = 'block';
+      
+      // Show results block and day navigation only when game is completely over
+      document.getElementById('results').style.display = 'block';
+      document.getElementById('day-navigation').style.display = 'block';
+      
+      // Show the final day's results
+      if (dayResults.length > 0) {
+        displayDayResults(dayResults.length);
+        currentDayView = dayResults.length;
+      }
     }
 
     // Update pizza costs and profits
