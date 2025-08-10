@@ -1357,12 +1357,40 @@
       }
     }
 
+    // Helper function to get display-friendly pizza choice
+    function getDisplayPizzaChoice(segmentName, currentPizzaChoice, hasCustomersToday) {
+      if (hasCustomersToday && currentPizzaChoice !== 'None') {
+        // Update and return the current pizza choice
+        lastSegmentPizzaChoices[segmentName] = currentPizzaChoice;
+        return currentPizzaChoice;
+      } else {
+        // Return last available pizza choice if exists, otherwise 'No pizza'
+        return lastSegmentPizzaChoices[segmentName] !== undefined ? 
+               lastSegmentPizzaChoices[segmentName] : 'No pizza';
+      }
+    }
+
+    // Helper function to get display-friendly feedback
+    function getDisplayFeedback(segmentName, currentFeedback, hasCustomersToday) {
+      if (hasCustomersToday && currentFeedback) {
+        // Update and return the current feedback
+        lastSegmentFeedback[segmentName] = currentFeedback;
+        return currentFeedback;
+      } else {
+        // Return last available feedback if exists, otherwise 'No feedback'
+        return lastSegmentFeedback[segmentName] !== undefined ? 
+               lastSegmentFeedback[segmentName] : 'No feedback';
+      }
+    }
+
     // Simulation state
     let currentDay = 1;
     let simulationComplete = false;
     let dayResults = [];
     let currentDayView = 1;
     let lastWeightedSatisfactionScores = {}; // Track last available weighted satisfaction scores for display
+    let lastSegmentPizzaChoices = {}; // Track last available pizza choice for each segment
+    let lastSegmentFeedback = {}; // Track last available feedback for each segment
 
     // Marketing activity effects
     const MARKETING_EFFECTS = {
@@ -1800,6 +1828,8 @@
       lastDailyReport = null; // Clear the last report
       dailyReportOpenedAutomatically = false; // Reset the flag
       lastWeightedSatisfactionScores = {}; // Reset satisfaction score tracking
+      lastSegmentPizzaChoices = {}; // Reset pizza choice tracking
+      lastSegmentFeedback = {}; // Reset feedback tracking
       // Reset visited customers tracking
       CUSTOMER_SEGMENTS.forEach(segment => {
         visitedCustomers[segment.name].clear();
@@ -2454,6 +2484,10 @@
         const mostPopularPizza = Object.entries(pizzaCounts)
           .sort((a, b) => b[1] - a[1])[0]?.[0] || 'None';
         
+        // Get display-friendly pizza choice and feedback (shows last available if no customers today)
+        const displayPizzaChoice = getDisplayPizzaChoice(seg.name, mostPopularPizza, hasCustomersToday);
+        const displayFeedback = getDisplayFeedback(seg.name, segmentData[seg.name].lastFeedback, hasCustomersToday);
+        
         const card = document.createElement('div');
         card.className = 'segment-satisfaction-card';
         card.innerHTML = `
@@ -2466,11 +2500,11 @@
           <div style="margin-top: 15px; padding: 10px; background: #fff3e0; border-radius: 8px; width: 100%;">
             <div style="margin-bottom: 8px;">
               <span style="font-weight: bold; color: #b33c00;">Pizza of Choice:</span><br>
-              ${mostPopularPizza}
+              ${displayPizzaChoice}
             </div>
             <div>
               <span style="font-weight: bold; color: #b33c00;">Last Feedback:</span><br>
-              <span style="font-style: italic;">"${segmentData[seg.name].lastFeedback || 'No feedback'}"</span>
+              <span style="font-style: italic;">"${displayFeedback}"</span>
             </div>
           </div>
         `;
@@ -2636,6 +2670,10 @@
           const mostPopularPizza = Object.entries(pizzaCounts)
             .sort((a, b) => b[1] - a[1])[0]?.[0] || 'None';
           
+          // Get display-friendly pizza choice and feedback (shows last available if no customers today)
+          const displayPizzaChoice = getDisplayPizzaChoice(seg.name, mostPopularPizza, hasCustomersToday);
+          const displayFeedback = getDisplayFeedback(seg.name, segmentData[seg.name].lastFeedback, hasCustomersToday);
+          
           const card = document.createElement('div');
           card.className = 'segment-satisfaction-card';
           card.innerHTML = `
@@ -2648,11 +2686,11 @@
             <div style="margin-top: 15px; padding: 10px; background: #fff3e0; border-radius: 8px; width: 100%;">
               <div style="margin-bottom: 8px;">
                 <span style="font-weight: bold; color: #b33c00;">Pizza of Choice:</span><br>
-                ${mostPopularPizza}
+                ${displayPizzaChoice}
               </div>
               <div>
                 <span style="font-weight: bold; color: #b33c00;">Last Feedback:</span><br>
-                <span style="font-style: italic;">"${segmentData[seg.name].lastFeedback || 'No feedback'}"</span>
+                <span style="font-style: italic;">"${displayFeedback}"</span>
               </div>
             </div>
           `;
